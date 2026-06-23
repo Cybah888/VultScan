@@ -1,0 +1,3685 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>VultScan v7.0</title>
+  <style>
+    :root {
+      --p: #1a56db;
+      --pd: #1240a4;
+      --pl: #e8f0fe;
+      --d: #dc2626;
+      --dl: #fee2e2;
+      --w: #d97706;
+      --wl: #fef3c7;
+      --s: #059669;
+      --sl: #d1fae5;
+      --bg: #f8fafc;
+      --s1: #ffffff;
+      --s2: #f1f5f9;
+      --s3: #e2e8f0;
+      --b1: #e2e8f0;
+      --b2: #cbd5e1;
+      --t1: #0f172a;
+      --t2: #475569;
+      --t3: #94a3b8;
+      --veia: #be185d;
+      --art: #1d4ed8;
+      --r: 12px;
+      --rsm: 8px;
+      --pill: 999px;
+    }
+
+    @media(prefers-color-scheme:dark) {
+      :root {
+        --p: #4f8ef7;
+        --pd: #6ba3f9;
+        --pl: #1e3a6e;
+        --d: #f87171;
+        --dl: #450a0a;
+        --w: #fbbf24;
+        --wl: #451a03;
+        --s: #34d399;
+        --sl: #022c22;
+        --bg: #0a0f1e;
+        --s1: #1e293b;
+        --s2: #0f172a;
+        --s3: #0d1424;
+        --b1: #334155;
+        --b2: #475569;
+        --t1: #f1f5f9;
+        --t2: #94a3b8;
+        --t3: #64748b;
+        --veia: #f472b6;
+        --art: #93c5fd;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--t1);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px 12px;
+    }
+
+    .outer {
+      display: flex;
+      gap: 20px;
+      max-width: 1060px;
+      width: 100%;
+      align-items: flex-start;
+    }
+
+    /* PHONE */
+    .phone {
+      width: 375px;
+      min-width: 375px;
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .13);
+    }
+
+    /* SPLASH / LOGIN PAGES */
+    .pg {
+      display: none;
+      flex-direction: column;
+      min-height: 590px;
+    }
+
+    .pg.active {
+      display: flex;
+    }
+
+    /* ---- SPLASH ---- */
+    .splash {
+      background: linear-gradient(160deg, #060d20 0%, #0f1f45 60%, #1a1040 100%);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 28px 22px 20px;
+      gap: 0;
+      overflow-y: auto;
+    }
+
+    .splash-logo-wrap {
+      width: 88px;
+      height: 88px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, .06);
+      border: 1.5px solid rgba(255, 255, 255, .12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 22px;
+    }
+
+    .splash-logo-wrap svg {
+      width: 52px;
+      height: 52px;
+    }
+
+    .splash-brand {
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -1px;
+      margin-bottom: 6px;
+    }
+
+    .splash-brand em {
+      color: #4f8ef7;
+      font-style: normal;
+    }
+
+    .splash-tag {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .5);
+      text-align: center;
+      margin-bottom: 36px;
+      line-height: 1.5;
+    }
+
+    .splash-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: var(--r);
+      border: none;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: opacity .15s;
+    }
+
+    .splash-btn-sus {
+      background: #1a56db;
+      color: #fff;
+    }
+
+    .splash-btn-sus:hover {
+      opacity: .9;
+    }
+
+    .splash-btn-free {
+      background: rgba(255, 255, 255, .08);
+      color: rgba(255, 255, 255, .85);
+      border: 1px solid rgba(255, 255, 255, .15);
+    }
+
+    .splash-btn-free:hover {
+      background: rgba(255, 255, 255, .13);
+    }
+
+    .splash-badges {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .splash-badge {
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: var(--pill);
+      padding: 4px 10px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, .5);
+      font-weight: 600;
+    }
+
+    /* ---- LOGIN SUS ---- */
+    .login-header {
+      background: var(--s1);
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: .5px solid var(--b1);
+    }
+
+    .login-back {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--t2);
+      font-size: 20px;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .login-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .login-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .login-hero {
+      background: var(--pl);
+      border-radius: var(--r);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .login-hero-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--p);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .login-hero-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .login-hero-text {
+      font-size: 13px;
+      color: var(--t2);
+      line-height: 1.5;
+    }
+
+    .login-hero-text strong {
+      color: var(--t1);
+    }
+
+    .flabel {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .finput {
+      width: 100%;
+      padding: 11px 14px;
+      border: .5px solid var(--b2);
+      border-radius: var(--rsm);
+      background: var(--s2);
+      color: var(--t1);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .finput:focus {
+      border-color: var(--p);
+    }
+
+    .fselect {
+      width: 100%;
+      padding: 11px 14px;
+      border: .5px solid var(--b2);
+      border-radius: var(--rsm);
+      background: var(--s2);
+      color: var(--t1);
+      font-size: 14px;
+      outline: none;
+      appearance: none;
+    }
+
+    .login-sep {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--t3);
+      font-size: 12px;
+    }
+
+    .login-sep::before,
+    .login-sep::after {
+      content: '';
+      flex: 1;
+      height: .5px;
+      background: var(--b1);
+    }
+
+    .lgpd-note {
+      background: var(--s2);
+      border: .5px solid var(--b1);
+      border-radius: var(--rsm);
+      padding: 10px 12px;
+      font-size: 11px;
+      color: var(--t3);
+      line-height: 1.5;
+    }
+
+    .btn-login {
+      padding: 14px;
+      border-radius: var(--r);
+      border: none;
+      background: var(--p);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn-login:hover {
+      background: var(--pd);
+    }
+
+    .btn-login:disabled {
+      background: var(--t3);
+      cursor: not-allowed;
+    }
+
+    /* ---- LOGIN LIVRE ---- */
+    .free-tag {
+      background: var(--wl);
+      border: .5px solid var(--w);
+      border-radius: var(--rsm);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--w);
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    /* ---- MAIN APP ---- */
+    .app-header {
+      background: var(--s1);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: .5px solid var(--b1);
+    }
+
+    .app-logo {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -.5px;
+    }
+
+    .app-logo em {
+      color: var(--p);
+      font-style: normal;
+    }
+
+    .sus-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--sl);
+      border: .5px solid var(--s);
+      border-radius: var(--pill);
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--s);
+    }
+
+    .free-pill {
+      background: var(--wl);
+      border: .5px solid var(--w);
+      color: var(--w);
+    }
+
+    .sus-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--s);
+    }
+
+    .free-dot {
+      background: var(--w);
+    }
+
+    /* BT BAR */
+    .bt-bar {
+      background: var(--s2);
+      padding: 8px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: .5px solid var(--b1);
+    }
+
+    .bt-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--p);
+    }
+
+    .bt-dot-anim {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--s);
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .3
+      }
+    }
+
+    .bt-right {
+      font-size: 11px;
+      color: var(--t3);
+    }
+
+    .bt-bar.disconnected .bt-left {
+      color: var(--t3);
+    }
+
+    .bt-bar.disconnected .bt-dot-anim {
+      background: var(--b2);
+      animation: none;
+    }
+
+    /* NAV TABS */
+    .nav {
+      display: flex;
+      border-top: .5px solid var(--b1);
+      background: var(--s1);
+    }
+
+    .ntab {
+      flex: 1;
+      padding: 10px 4px 8px;
+      border: none;
+      background: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--t3);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      transition: color .15s;
+    }
+
+    .ntab.active {
+      color: var(--p);
+    }
+
+    .ntab svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* SCREENS */
+    .scr {
+      display: none;
+      flex-direction: column;
+    }
+
+    .scr.active {
+      display: flex;
+    }
+
+    /* ===== CADASTRO TAB ===== */
+    .tab-header {
+      padding: 16px 20px 10px;
+    }
+
+    .tab-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .tab-header p {
+      font-size: 12px;
+      color: var(--t2);
+      margin-top: 2px;
+    }
+
+    .prof-body {
+      padding: 0 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .fgroup {
+      background: var(--s1);
+      border: .5px solid var(--b1);
+      border-radius: var(--r);
+      padding: 14px;
+    }
+
+    .fgroup-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: .5px solid var(--b1);
+    }
+
+    .frow {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .frow:last-child {
+      margin-bottom: 0;
+    }
+
+    .frow label {
+      font-size: 11px;
+      color: var(--t2);
+      font-weight: 600;
+    }
+
+    .frow input,
+    .frow select {
+      padding: 9px 12px;
+      border: .5px solid var(--b2);
+      border-radius: var(--rsm);
+      background: var(--s2);
+      color: var(--t1);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .frow input:focus,
+    .frow select:focus {
+      border-color: var(--p);
+    }
+
+    .validated-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      background: var(--sl);
+      border: .5px solid var(--s);
+      border-radius: var(--rsm);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--s);
+    }
+
+    .btn-save {
+      width: 100%;
+      padding: 13px;
+      background: var(--p);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn-save:hover {
+      background: var(--pd);
+    }
+
+    .protocol-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: .5px solid var(--b1);
+    }
+
+    .protocol-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .proto-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .proto-info {
+      flex: 1;
+    }
+
+    .proto-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .proto-desc {
+      font-size: 11px;
+      color: var(--t2);
+      margin-top: 2px;
+      line-height: 1.5;
+    }
+
+    .toggle {
+      width: 36px;
+      height: 20px;
+      border-radius: var(--pill);
+      background: var(--p);
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .toggle.off {
+      background: var(--b2);
+    }
+
+    .toggle.off::after {
+      right: auto;
+      left: 3px;
+    }
+
+    /* ===== SCANNER TAB ===== */
+    .scanner-cam {
+      position: relative;
+      background: #04080f;
+      height: 360px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .scan-label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(0, 0, 0, .65);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--pill);
+      letter-spacing: .5px;
+    }
+
+    .sc {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-color: rgba(79, 142, 247, .7);
+      border-style: solid;
+      border-width: 0;
+    }
+
+    .sc.tl {
+      top: 12px;
+      left: 12px;
+      border-top-width: 2px;
+      border-left-width: 2px;
+    }
+
+    .sc.tr {
+      top: 12px;
+      right: 12px;
+      border-top-width: 2px;
+      border-right-width: 2px;
+    }
+
+    .sc.bl {
+      bottom: 12px;
+      left: 12px;
+      border-bottom-width: 2px;
+      border-left-width: 2px;
+    }
+
+    .sc.br {
+      bottom: 12px;
+      right: 12px;
+      border-bottom-width: 2px;
+      border-right-width: 2px;
+    }
+
+    .ia-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(5, 12, 30, .88);
+      padding: 7px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ia-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: #4f8ef7;
+      letter-spacing: .5px;
+    }
+
+    .ia-conf {
+      font-size: 10px;
+      color: #94a3b8;
+    }
+
+    .ia-cv {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    .scan-alert {
+      margin: 8px 16px 0;
+      padding: 9px 12px;
+      border-radius: var(--rsm);
+      font-size: 12px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .scan-alert.danger {
+      background: var(--dl);
+      color: var(--d);
+      border: .5px solid var(--d);
+    }
+
+    .scan-alert.warn {
+      background: var(--wl);
+      color: var(--w);
+      border: .5px solid var(--w);
+    }
+
+    .scan-ctrls {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ctrl-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .sim-btn {
+      padding: 9px 10px;
+      border-radius: var(--rsm);
+      border: .5px solid var(--b2);
+      background: var(--s1);
+      color: var(--t2);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s;
+    }
+
+    .sim-btn:hover {
+      background: var(--s2);
+    }
+
+    .sim-btn.av {
+      border-color: var(--veia);
+      color: var(--veia);
+      background: rgba(190, 24, 93, .07);
+    }
+
+    .sim-btn.aa {
+      border-color: var(--art);
+      color: var(--art);
+      background: rgba(29, 78, 216, .07);
+    }
+
+    .sim-btn.af {
+      border-color: var(--d);
+      color: var(--d);
+      background: var(--dl);
+    }
+
+    .sim-btn.ae {
+      border-color: var(--t3);
+      color: var(--t3);
+      background: var(--s2);
+    }
+
+    .sdot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dv {
+      background: var(--veia);
+    }
+
+    .da {
+      background: var(--art);
+    }
+
+    .df {
+      background: var(--d);
+    }
+
+    .de {
+      background: var(--t3);
+    }
+
+    .btn-reg {
+      margin: 4px 16px 14px;
+      padding: 13px;
+      background: var(--p);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .15s;
+    }
+
+    .btn-reg:hover {
+      background: var(--pd);
+    }
+
+    @keyframes pva {
+
+      0%,
+      100% {
+        opacity: .85
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    @keyframes irScan {
+      0% {
+        transform: translateY(0)
+      }
+
+      100% {
+        transform: translateY(340px)
+      }
+    }
+
+    @keyframes ppgPulse {
+
+      0%,
+      100% {
+        transform: scaleX(1)
+      }
+
+      40% {
+        transform: scaleX(1.04)
+      }
+
+      60% {
+        transform: scaleX(0.97)
+      }
+    }
+
+    @keyframes par {
+      0%,100% { stroke-width: 3.8; opacity: 0.9; }
+      40%      { stroke-width: 4.8; opacity: 1;   }
+      60%      { stroke-width: 3.5; opacity: 0.85;}
+    }
+    .vp { animation: pva 1.8s infinite ease-in-out; }
+    .ap { animation: par 1.1s infinite ease-in-out; }
+
+    .scp {
+      fill: #f59e0b;
+      opacity: 0;
+      transition: opacity .4s;
+    }
+
+    /* ===== HISTÓRICO TAB ===== */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 0 16px 12px;
+    }
+
+    .stat {
+      background: var(--s2);
+      border-radius: var(--rsm);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat-v {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .stat-l {
+      font-size: 10px;
+      color: var(--t3);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .plist {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 16px 16px;
+    }
+
+    .pcard {
+      background: var(--s1);
+      border: .5px solid var(--b1);
+      border-radius: var(--r);
+      padding: 12px 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color .15s;
+    }
+
+    .pcard:hover {
+      border-color: var(--b2);
+    }
+
+    .pname {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .psub {
+      font-size: 11px;
+      color: var(--t2);
+      margin-top: 2px;
+    }
+
+    .psync {
+      font-size: 10px;
+      color: var(--s);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--pill);
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+
+    .bi {
+      background: rgba(190, 24, 93, .1);
+      color: var(--veia);
+    }
+
+    .bc {
+      background: var(--wl);
+      color: var(--w);
+    }
+
+    .bn {
+      background: var(--dl);
+      color: var(--d);
+    }
+
+    .be {
+      background: var(--s2);
+      color: var(--t2);
+    }
+
+    /* ===== PULSEIRA TAB ===== */
+    .device-card {
+      margin: 0 16px 12px;
+      background: var(--s1);
+      border: .5px solid var(--b1);
+      border-radius: var(--r);
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .device-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .device-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--pl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .device-icon svg {
+      width: 30px;
+      height: 30px;
+      stroke: var(--p);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .device-name {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .device-sub {
+      font-size: 12px;
+      color: var(--t2);
+      margin-top: 2px;
+    }
+
+    .conn-badge {
+      margin-top: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--pill);
+    }
+
+    .conn-on {
+      background: var(--sl);
+      color: var(--s);
+    }
+
+    .conn-off {
+      background: var(--s2);
+      color: var(--t3);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      background: var(--s2);
+      border-radius: var(--rsm);
+      padding: 10px 12px;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: var(--t3);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .metric-val {
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 3px;
+    }
+
+    .metric-unit {
+      font-size: 11px;
+      color: var(--t2);
+      font-weight: 400;
+    }
+
+    .bat-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--b1);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .bat-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--s);
+      transition: width .5s;
+    }
+
+    .conn-opts {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .conn-opt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--s2);
+      border-radius: var(--rsm);
+    }
+
+    .conn-opt-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .conn-opt-sub {
+      font-size: 11px;
+      color: var(--t2);
+      font-weight: 400;
+    }
+
+    .conn-opt-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bt-icon-bg {
+      background: var(--pl);
+    }
+
+    .wifi-icon-bg {
+      background: var(--sl);
+    }
+
+    .conn-opt-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .bt-icon-bg svg {
+      stroke: var(--p);
+    }
+
+    .wifi-icon-bg svg {
+      stroke: var(--s);
+    }
+
+    .btn-connect {
+      padding: 7px 14px;
+      border-radius: var(--pill);
+      border: .5px solid var(--p);
+      background: var(--pl);
+      color: var(--p);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .signal-bars {
+      display: flex;
+      gap: 3px;
+      align-items: flex-end;
+      height: 16px;
+    }
+
+    .signal-bars span {
+      width: 3px;
+      border-radius: 1px;
+      display: block;
+    }
+
+    .sig-w {
+      background: var(--s);
+    }
+
+    .sig-e {
+      background: var(--b2);
+    }
+
+    .loc-card {
+      margin: 0 16px;
+      background: var(--s1);
+      border: .5px solid var(--b1);
+      border-radius: var(--r);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .loc-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 10px;
+    }
+
+    .loc-map {
+      background: var(--s2);
+      border-radius: var(--rsm);
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .loc-map-grid {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(var(--b1) 1px, transparent 1px), linear-gradient(90deg, var(--b1) 1px, transparent 1px);
+      background-size: 20px 20px;
+      opacity: .5;
+    }
+
+    .loc-pin {
+      width: 22px;
+      height: 22px;
+      background: var(--p);
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 3px rgba(26, 86, 219, .3);
+      z-index: 1;
+    }
+
+    .loc-info {
+      font-size: 12px;
+      color: var(--t2);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .loc-info strong {
+      color: var(--t1);
+    }
+
+    .history-log {
+      margin: 0 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 8px 10px;
+      background: var(--s2);
+      border-radius: var(--rsm);
+    }
+
+    .log-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .log-ok {
+      background: var(--s);
+    }
+
+    .log-warn {
+      background: var(--w);
+    }
+
+    .log-err {
+      background: var(--d);
+    }
+
+    .log-time {
+      color: var(--t3);
+      font-size: 10px;
+      font-weight: 600;
+      margin-left: auto;
+    }
+
+    /* ===== MODALS ===== */
+    .mbackdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      z-index: 500;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .mbackdrop.open {
+      display: flex;
+    }
+
+    .msheet {
+      background: var(--s1);
+      border-radius: 24px 24px 0 0;
+      width: 375px;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .mhandle {
+      width: 36px;
+      height: 4px;
+      background: var(--b2);
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    .mtitle {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .esus-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .esus-btn {
+      padding: 11px 14px;
+      background: #0056ac;
+      color: #fff;
+      border: none;
+      border-radius: var(--rsm);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .demo-tip {
+      background: rgba(26, 86, 219, .07);
+      border: .5px dashed var(--p);
+      border-radius: var(--rsm);
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--p);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .esus-res {
+      background: var(--s2);
+      border: .5px solid var(--b1);
+      border-radius: var(--rsm);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .esus-res-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .fav-block {
+      background: var(--dl);
+      border: .5px solid var(--d);
+      border-radius: var(--rsm);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--d);
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .loader-row {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--p);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .spinner {
+      width: 15px;
+      height: 15px;
+      border: 2px solid var(--pl);
+      border-top-color: var(--p);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .f2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .mfooter {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 12px;
+      border: .5px solid var(--b2);
+      background: var(--s2);
+      color: var(--t2);
+      border-radius: var(--r);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-ok {
+      flex: 2;
+      padding: 12px;
+      background: var(--p);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn-ok:hover {
+      background: var(--pd);
+    }
+
+    .btn-ok:disabled {
+      background: var(--t3);
+      cursor: not-allowed;
+    }
+
+    .audit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .acell {
+      background: var(--s2);
+      border: .5px solid var(--b1);
+      border-radius: var(--rsm);
+      padding: 8px 10px;
+    }
+
+    .acell-l {
+      font-size: 10px;
+      color: var(--t3);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .acell-v {
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .note-box {
+      background: var(--s2);
+      border: .5px solid var(--b1);
+      border-radius: var(--rsm);
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.6;
+      font-family: monospace;
+      white-space: pre-wrap;
+      margin-bottom: 10px;
+    }
+
+    .btn-copy {
+      width: 100%;
+      padding: 10px;
+      background: var(--s2);
+      border: .5px solid var(--b2);
+      border-radius: var(--rsm);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--t1);
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: var(--pill);
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 9999;
+      display: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .25);
+    }
+
+    @media(max-width:680px) {
+      .outer {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .phone {
+        min-width: 0;
+        width: 100%;
+        max-width: 375px;
+      }
+
+      .sidebar-r {
+        display: none;
+      }
+    }
+
+    /* Efeito de trava magnética na mira central */
+    #scanner-reticle {
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    /* Pulsação visual sutil quando o enfermeiro encontra o ponto verde perfeito */
+    .pulse-active {
+      transform: translate(-50%, -50%) scale(1.08) !important;
+      animation: reticleGlow 1.5s infinite ease-in-out;
+    }
+
+    @keyframes reticleGlow {
+      0% {
+        box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 10px rgba(5, 150, 105, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
+      }
+    }
+
+    /* Transição suave para o card de telemetria */
+    #scanner-status-card {
+      transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        border-left-color 0.2s ease;
+      will-change: transform, opacity;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="outer">
+    <div class="phone">
+      <!-- ==================== SPLASH ==================== -->
+      <div class="pg active" id="pg-splash">
+        <div class="splash">
+          <div class="splash-tag" style="margin-bottom:10px;">Sistema de mapeamento vascular assistido<br>por IA ·
+            Integrado ao e-SUS / RNDS</div>
+
+          <!-- Separador com logo Vult-Vein -->
+          <div
+            style="display:flex;align-items:center;gap:10px;margin-bottom:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 14px;width:100%;">
+            <div
+              style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#1a56db,#be185d);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"
+                stroke-linecap="round">
+                <rect x="5" y="2" width="14" height="20" rx="4" />
+                <circle cx="12" cy="17" r="1.5" />
+                <path d="M9 7h6M9 11h4" />
+              </svg>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:700;color:#fff;letter-spacing:-.2px;">Vult<span
+                  style="color:#4f8ef7;">Vein</span></div>
+              <div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:1px;">Bracelete BLE 5.0 · IR · Turmalina
+                Negra</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:6px;height:6px;border-radius:50%;background:#34d399;animation:blink 2s infinite;"></div>
+              <span style="font-size:10px;color:#34d399;font-weight:700;">Pronto</span>
+            </div>
+          </div>
+
+          <button class="splash-btn splash-btn-sus" onclick="goTo('pg-login-sus')">
+            🏥 Acesso com e-SUS / CadSUS
+          </button>
+          <button class="splash-btn splash-btn-free" onclick="goTo('pg-login-free')">
+            🔬 Acesso Livre (COREN / CRM / CFO)
+          </button>
+
+
+          <!-- Live vitals mini-strip on splash -->
+          <div
+            style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-top:16px;margin-bottom:8px;">
+            <div
+              style="background:rgba(225,29,72,.12);border:1px solid rgba(225,29,72,.3);border-radius:10px;padding:8px;text-align:center;">
+              <div style="font-size:18px;font-weight:800;color:#f472b6;line-height:1;">72</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.5);font-weight:600;margin-top:2px;">FC · bpm</div>
+            </div>
+            <div
+              style="background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.3);border-radius:10px;padding:8px;text-align:center;">
+              <div style="font-size:18px;font-weight:800;color:#93c5fd;line-height:1;">98%</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.5);font-weight:600;margin-top:2px;">SpO₂</div>
+            </div>
+            <div
+              style="background:rgba(5,150,105,.12);border:1px solid rgba(5,150,105,.3);border-radius:10px;padding:8px;text-align:center;">
+              <div style="font-size:18px;font-weight:800;color:#34d399;line-height:1;">36.8</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.5);font-weight:600;margin-top:2px;">Temp °C</div>
+            </div>
+          </div>
+          <div class="splash-badges" style="margin-top:4px;">
+            <div class="splash-badge">HL7 FHIR R4</div>
+            <div class="splash-badge">RNDS · DATASUS</div>
+            <div class="splash-badge">BLE 5.0 + WiFi</div>
+            <div class="splash-badge">LGPD Compliant</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== LOGIN SUS ==================== -->
+      <div class="pg" id="pg-login-sus">
+        <div class="login-header">
+          <button class="login-back" onclick="goTo('pg-splash')">‹</button>
+          <div class="login-title">Acesso Profissional SUS</div>
+        </div>
+        <div class="login-body">
+          <div class="login-hero">
+            <div class="login-hero-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <div class="login-hero-text">Acesso integrado à <strong>Rede Nacional de Dados em Saúde (RNDS)</strong>.
+              Seus procedimentos são sincronizados ao prontuário eletrônico nacional.</div>
+          </div>
+          <div>
+            <label class="flabel">Nome completo</label>
+            <input class="finput" id="sus-name" type="text" placeholder="Enf. Maria Silva" value="Enf. Cibele Reis" />
+          </div>
+          <div>
+            <label class="flabel">Conselho / Registro profissional</label>
+            <input class="finput" id="sus-coren" type="text" placeholder="COREN-SP 123.456-ENF"
+              value="COREN-SP 123.456-ENF" />
+          </div>
+          <div>
+            <label class="flabel">CPF do profissional</label>
+            <input class="finput" id="sus-cpf" type="text" placeholder="000.000.000-00" oninput="fmtCPF(this)" />
+          </div>
+          <div class="lgpd-note">🔒 Seus dados são protegidos pela LGPD (Lei 13.709/2018) e usados exclusivamente para
+            assinatura digital dos registros clínicos.</div>
+          <button class="btn-login" onclick="loginSUS()">Entrar e Sincronizar com e-SUS</button>
+        </div>
+      </div>
+
+      <!-- ==================== LOGIN LIVRE ==================== -->
+      <div class="pg" id="pg-login-free">
+        <div class="login-header">
+          <button class="login-back" onclick="goTo('pg-splash')">‹</button>
+          <div class="login-title">Acesso Livre — Localizador Vascular</div>
+        </div>
+        <div class="login-body">
+          <div class="free-tag">⚠️ Modo sem integração e-SUS. Você poderá usar o <strong>localizador de veias</strong>
+            assistido por IA, mas os registros não serão enviados ao prontuário nacional.</div>
+          <div>
+            <label class="flabel">Nome completo</label>
+            <input class="finput" id="free-name" type="text" placeholder="Dr. João Souza" />
+          </div>
+          <div>
+            <label class="flabel">Tipo de habilitação</label>
+            <select class="fselect" id="free-type">
+              <option value="COREN">COREN — Enfermagem</option>
+              <option value="CRM">CRM — Medicina</option>
+              <option value="CFO">CFO — Odontologia</option>
+              <option value="CREFITO">CREFITO — Fisioterapia</option>
+              <option value="CFF">CFF — Farmácia</option>
+              <option value="Outro">Outro Conselho de Saúde</option>
+            </select>
+          </div>
+          <div>
+            <label class="flabel">Número do registro</label>
+            <input class="finput" id="free-reg" type="text" placeholder="Ex: 987.654-ENF" />
+          </div>
+          <div>
+            <label class="flabel">Estado (UF)</label>
+            <select class="fselect" id="free-uf">
+              <option>SP</option>
+              <option>RJ</option>
+              <option>MG</option>
+              <option>RS</option>
+              <option>PR</option>
+              <option>SC</option>
+              <option>BA</option>
+              <option>CE</option>
+              <option>PE</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="lgpd-note">ℹ️ Registro salvo apenas no dispositivo. Uso exclusivo para orientação do procedimento.
+            Não substitui o julgamento clínico profissional.</div>
+          <button class="btn-login" onclick="loginFree()">Entrar como Acesso Livre</button>
+        </div>
+      </div>
+
+      <!-- ==================== APP PRINCIPAL ==================== -->
+      <div class="pg" id="pg-app">
+        <div class="app-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="goTo('pg-splash')"
+              style="background:none;border:none;cursor:pointer;color:var(--t3);font-size:18px;line-height:1;padding:0 6px 0 0;"
+              title="Voltar à capa">‹</button>
+            <div class="app-logo">Vult<em>Scan</em></div>
+          </div>
+          <div id="app-mode-pill" class="sus-pill">
+            <div class="sus-dot"></div>e-SUS Ativo
+          </div>
+        </div>
+        <div class="bt-bar" id="bt-bar">
+          <div class="bt-left">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round">
+              <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
+            </svg>
+            Vult-Vein Ativo
+            <div class="bt-dot-anim"></div>
+          </div>
+          <div class="bt-right" id="bt-info">🔋 85% · 37.1°C</div>
+        </div>
+
+        <!-- ---- ABAS ---- -->
+        <div class="scr active" id="scr-cadastro">
+          <div class="tab-header">
+            <h2>Meu Perfil</h2>
+            <p>Identidade clínica e protocolos de segurança</p>
+          </div>
+          <div class="prof-body">
+            <div class="fgroup">
+              <div class="fgroup-title">Identidade Profissional</div>
+              <div class="frow">
+                <label>Nome do(a) Profissional</label>
+                <input type="text" id="p-name" value="Enf. Cibele Reis" />
+              </div>
+              <div class="frow">
+                <label>Registro Profissional</label>
+                <input type="text" id="p-reg" value="COREN-SP 123.456-ENF" />
+              </div>
+              <div class="frow">
+                <label>CPF do Operador</label>
+                <input type="text" id="p-cpf" placeholder="000.000.000-00" oninput="fmtCPF(this)" />
+              </div>
+              <div class="frow">
+                <label>Setor / Unidade Hospitalar</label>
+                <input type="text" id="p-setor" placeholder="Ex: UTI Adulto — 3º Andar" />
+              </div>
+              <div class="validated-row">✓ Identidade validada — assina prontuários digitais via RNDS</div>
+            </div>
+            <div class="fgroup">
+              <div class="fgroup-title">Protocolos de Segurança</div>
+              <div class="protocol-item">
+                <div class="proto-icon">🛡️</div>
+                <div class="proto-info">
+                  <div class="proto-title">Trava FAV / Mastectomia</div>
+                  <div class="proto-desc">Bloqueia punção em membros com fístula arteriovenosa ativa ou esvaziamento
+                    ganglionar</div>
+                </div>
+                <div class="toggle"></div>
+              </div>
+              <div class="protocol-item">
+                <div class="proto-icon">💊</div>
+                <div class="proto-info">
+                  <div class="proto-title">Alertas de Alergias (ConecteSUS)</div>
+                  <div class="proto-desc">Injeta alertas críticos do ConecteSUS antes de cada procedimento</div>
+                </div>
+                <div class="toggle"></div>
+              </div>
+              <div class="protocol-item">
+                <div class="proto-icon">📡</div>
+                <div class="proto-info">
+                  <div class="proto-title">Sincronização RNDS em Tempo Real</div>
+                  <div class="proto-desc">Envia payload HL7/FHIR ao prontuário nacional após cada procedimento</div>
+                </div>
+                <div class="toggle" id="toggle-rnds"></div>
+              </div>
+              <div class="protocol-item">
+                <div class="proto-icon">🌡️</div>
+                <div class="proto-info">
+                  <div class="proto-title">Monitor Térmico do Bracelete</div>
+                  <div class="proto-desc">Alerta se temperatura indicar isquemia ou inflamação no membro</div>
+                </div>
+                <div class="toggle off"></div>
+              </div>
+            </div>
+            <button class="btn-save" onclick="toast('Perfil salvo com sucesso!')">Salvar Perfil</button>
+          </div>
+        </div>
+
+        <!-- SCANNER -->
+        <div class="scr" id="scr-scanner">
+          <div class="scanner-cam" id="scan-cam">
+            <span class="scan-label" id="scan-lbl">IA · Aguardando...</span>
+            <div class="sc tl"></div>
+            <div class="sc tr"></div>
+            <div class="sc bl"></div>
+            <div class="sc br"></div>
+
+            <!-- MIRA / RETÍCULO ADICIONADO -->
+            <div id="scanner-reticle"
+              style="position: absolute; width: 44px; height: 44px; border: 2.5px solid var(--b2); border-radius: 50%; pointer-events: none; transition: border-color 0.2s ease, transform 0.2s ease; transform: translate(-50%, -50%); display: none; z-index: 10; color: var(--b2);">
+              <div
+                style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: currentColor; border-radius: 50%; transform: translate(-50%, -50%);">
+              </div>
+            </div>
+
+            <svg width="220" height="340" viewBox="0 0 220 340" id="arm-svg"
+              style="filter:drop-shadow(0 0 2px rgba(0,0,0,.6)); cursor: crosshair;">
+              <defs>
+                <!-- Skin gradients -->
+                <radialGradient id="skinGrad" cx="50%" cy="35%" r="60%">
+                  <stop offset="0%" stop-color="#c8956c"/>
+                  <stop offset="55%" stop-color="#b07850"/>
+                  <stop offset="100%" stop-color="#8d5c35"/>
+                </radialGradient>
+                <!-- Jugular neck gradient -->
+                <radialGradient id="neckGrad" cx="50%" cy="50%" r="55%">
+                  <stop offset="0%" stop-color="#d4a57b"/>
+                  <stop offset="100%" stop-color="#9e6840"/>
+                </radialGradient>
+                <!-- Vein glow filter -->
+                <filter id="veinGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <!-- Artery glow — stronger, pulsing feel -->
+                <filter id="artGlow" x="-40%" y="-40%" width="180%" height="180%">
+                  <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <!-- Flebite edema glow -->
+                <filter id="edemaGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="8"/>
+                </filter>
+                <!-- Stenosis narrowing filter -->
+                <filter id="stenosisGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <!-- Artery danger pulse animation via animate -->
+                <radialGradient id="arteryRiskGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#ef4444" stop-opacity="0.5"/>
+                  <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+
+              <!-- ══════ ANATOMY GROUP ══════ -->
+
+              <!-- HEAD / NECK silhouette (top, for jugular view) -->
+              <!-- Neck cylinder -->
+              <path id="neck-shape" d="M82 6 Q78 0 78 0 L142 0 Q142 0 138 6 Q134 14 134 30 L86 30 Q86 14 82 6 Z"
+                fill="url(#neckGrad)" opacity="0" style="transition:opacity .5s;" stroke="#7a4a28" stroke-width="1" stroke-opacity=".2" visibility="hidden"/>
+              <!-- Neck side shading -->
+              <path id="neck-shade" d="M86 6 Q84 18 84 30" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="5" stroke-linecap="round" opacity="0" style="transition:opacity .5s;" visibility="hidden"/>
+              <!-- Clavicle hint -->
+              <path id="clavicle" d="M70 30 Q100 24 130 30" fill="none" stroke="#9e6840" stroke-width="1.5" opacity="0" style="transition:opacity .5s;" stroke-opacity=".4" visibility="hidden"/>
+              <!-- Shoulder/arm connector when jugular is shown -->
+              <path id="shoulder-left"  d="M36 50 Q38 40 70 30" fill="none" stroke="#9e6840" stroke-width="8" stroke-linecap="round" opacity="0" style="transition:opacity .5s;" stroke-opacity=".3" visibility="hidden"/>
+              <path id="shoulder-right" d="M184 50 Q182 40 130 30" fill="none" stroke="#9e6840" stroke-width="8" stroke-linecap="round" opacity="0" style="transition:opacity .5s;" stroke-opacity=".3" visibility="hidden"/>
+
+              <!-- ══ FOREARM silhouette ══ -->
+              <path id="forearm-shape"
+                d="M58 8 Q42 12 36 82 Q30 162 32 222 Q34 282 44 322 Q54 340 80 340 Q100 344 120 340 Q146 336 156 322 Q166 282 168 222 Q170 162 164 82 Q158 12 142 8 Z"
+                fill="url(#skinGrad)" opacity="0.85" stroke="#7a4a28" stroke-width="1.5" stroke-opacity=".25"/>
+              <!-- Muscle highlight left -->
+              <path d="M72 62 Q68 122 70 202 Q72 252 78 312" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="9" stroke-linecap="round"/>
+              <!-- Muscle shadow right -->
+              <path d="M128 62 Q132 122 130 202 Q128 252 122 312" fill="none" stroke="rgba(0,0,0,.05)" stroke-width="7" stroke-linecap="round"/>
+
+              <!-- ══════ VEINS (pink/rose) ══════ -->
+              <!-- V. Cefálica principal -->
+              <path class="vp" id="v1"
+                d="M66 332 Q62 282 60 232 Q57 177 62 132 Q66 97 70 62 Q73 32 75 10"
+                stroke="#f472b6" stroke-width="5" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .5s;filter:url(#veinGlow);" visibility="hidden"/>
+              <!-- V. Basílica principal -->
+              <path class="vp" id="v2"
+                d="M142 332 Q146 282 148 232 Q151 177 146 132 Q142 97 138 62 Q135 32 133 10"
+                stroke="#f472b6" stroke-width="5" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .5s;filter:url(#veinGlow);" visibility="hidden"/>
+              <!-- V. Mediana do Cotovelo -->
+              <path class="vp" id="v3"
+                d="M62 132 Q80 120 100 117 Q118 114 146 132"
+                stroke="#f472b6" stroke-width="4.5" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .5s;filter:url(#veinGlow);" visibility="hidden"/>
+              <!-- Ramo cefálico acessório -->
+              <path class="vp" id="v4"
+                d="M62 132 Q55 107 58 82 Q60 64 64 46"
+                stroke="#f472b6" stroke-width="3" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .4s;" visibility="hidden"/>
+              <!-- Sub-ramo cefálico distal -->
+              <path id="v5" d="M66 252 Q58 237 56 212 Q54 187 58 167"
+                stroke="#f472b6" stroke-width="2.5" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .4s;" visibility="hidden"/>
+              <!-- Sub-ramo basílico -->
+              <path id="v6" d="M142 252 Q150 232 152 207 Q154 182 150 162"
+                stroke="#f472b6" stroke-width="2.5" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .4s;" visibility="hidden"/>
+              <!-- Micro-ramos palmares -->
+              <path id="v7" d="M80 312 Q90 297 100 292 Q112 289 122 297 Q130 304 136 312"
+                stroke="#f472b6" stroke-width="2" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .4s;" visibility="hidden"/>
+
+              <!-- ══════ FISTULA AV (FAV) ══════ -->
+              <!-- Fistula = anastomose entre veia basílica e artéria radial — loop dilatado -->
+              <path class="vp" id="fav-loop"
+                d="M104 200 Q88 185 82 160 Q78 140 90 128 Q104 115 118 128 Q130 140 126 160 Q120 185 104 200 Z"
+                stroke="#a855f7" stroke-width="5" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .6s;filter:url(#veinGlow);" visibility="hidden"/>
+              <!-- FAV label -->
+              <text id="fav-label" x="104" y="174" text-anchor="middle" font-size="8" font-weight="700"
+                fill="#a855f7" opacity="0" style="transition:opacity .6s;" visibility="hidden">FAV</text>
+
+              <!-- ══════ VEIAS CERVICAIS (aparecem só no cenário JUGULAR) ══════ -->
+
+              <!-- V. Jugular Interna DIREITA (1ª opção — azul, médico) -->
+              <path id="jug-int-d"
+                d="M104 28 Q103 22 102 18 Q101 12 102 8 Q103 5 105 5 Q107 5 108 8 Q109 12 108 18 Q107 22 106 28"
+                stroke="#3b82f6" stroke-width="5" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .5s;filter:url(#artGlow);" visibility="hidden"/>
+              <!-- Marcador 1ª opção -->
+              <text id="jug-int-d-lbl" x="116" y="14" font-size="6" font-weight="700" fill="#3b82f6"
+                opacity="0" style="transition:opacity .5s;" visibility="hidden">1ª</text>
+
+              <!-- V. Jugular Interna ESQUERDA (espelhada) -->
+              <path id="jug-int-e"
+                d="M96 28 Q95 22 94 18 Q93 12 94 8 Q95 5 97 5 Q99 5 100 8 Q101 12 100 18 Q99 22 98 28"
+                stroke="#3b82f6" stroke-width="4" stroke-linecap="round" fill="none" stroke-dasharray="5 3"
+                style="opacity:0;transition:opacity .5s;filter:url(#artGlow);" visibility="hidden"/>
+
+              <!-- V. Subclávia DIREITA (2ª opção — azul tracejada, médico) -->
+              <path id="subcl-d"
+                d="M108 28 Q118 26 130 24 Q145 22 152 26"
+                stroke="#60a5fa" stroke-width="4" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .5s;filter:url(#artGlow);" visibility="hidden"/>
+              <text id="subcl-d-lbl" x="148" y="20" font-size="6" font-weight="700" fill="#60a5fa"
+                opacity="0" style="transition:opacity .5s;" visibility="hidden">2ª</text>
+
+              <!-- V. Subclávia ESQUERDA (3ª opção) -->
+              <path id="subcl-e"
+                d="M96 28 Q86 26 74 24 Q59 22 52 26"
+                stroke="#60a5fa" stroke-width="4" stroke-linecap="round" fill="none" stroke-dasharray="5 3"
+                style="opacity:0;transition:opacity .5s;filter:url(#artGlow);" visibility="hidden"/>
+              <text id="subcl-e-lbl" x="54" y="20" font-size="6" font-weight="700" fill="#60a5fa"
+                opacity="0" style="transition:opacity .5s;" visibility="hidden">3ª</text>
+
+              <!-- V. Jugular EXTERNA DIREITA (4ª opção — rosa, enfermeiro) -->
+              <path class="vp" id="jug-ext"
+                d="M111 28 Q114 22 115 16 Q116 10 113 7 Q110 5 107 7"
+                stroke="#f472b6" stroke-width="5" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .5s;filter:url(#veinGlow);" visibility="hidden"/>
+              <text id="jug-ext-lbl" x="120" y="8" font-size="6" font-weight="700" fill="#f472b6"
+                opacity="0" style="transition:opacity .5s;" visibility="hidden">4ª ENF</text>
+
+              <!-- Artéria Carótida (ao lado da jugular interna — azul pulsante, NÃO puncionar) -->
+              <path class="ap" id="carotid"
+                d="M100 28 Q100 22 100 16 Q100 10 100 6"
+                stroke="#93c5fd" stroke-width="3.5" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .5s;filter:url(#artGlow);" visibility="hidden"/>
+              <!-- Carótida label + aviso -->
+              <text id="carotid-lbl" x="100" y="3" text-anchor="middle" font-size="5.5" font-weight="700"
+                fill="#93c5fd" opacity="0" style="transition:opacity .5s;" visibility="hidden">⚡ Carótida</text>
+
+              <!-- Legenda das veias cervicais -->
+              <g id="jug-legend" opacity="0" style="transition:opacity .5s;" visibility="hidden">
+                <!-- fundo legenda -->
+                <rect x="28" y="30" width="164" height="11" rx="3" fill="rgba(0,0,0,.55)"/>
+                <circle cx="35" cy="35.5" r="3" fill="#3b82f6"/>
+                <text x="40" y="38" font-size="6" fill="#93c5fd">JI/Subcl. = MD</text>
+                <circle cx="88" cy="35.5" r="3" fill="#f472b6"/>
+                <text x="93" y="38" font-size="6" fill="#f472b6">JE = ENF</text>
+                <circle cx="130" cy="35.5" r="3" fill="#60a5fa" opacity=".6"/>
+                <text x="135" y="38" font-size="6" fill="#60a5fa">⚡ Carótida</text>
+              </g>
+
+              <!-- Jugular interna genérica (compatibilidade reset) -->
+              <path id="jug-int"
+                d="M96 28 Q94 18 96 10 Q100 4 104 10 Q106 18 104 28"
+                stroke="#93c5fd" stroke-width="3" stroke-linecap="round" fill="none"
+                stroke-dasharray="4 3"
+                style="opacity:0;transition:opacity .5s;filter:url(#artGlow);" visibility="hidden"/>
+              <text id="jug-label" x="100" y="36" text-anchor="middle" font-size="7" font-weight="700"
+                fill="#94a3b8" opacity="0" style="transition:opacity .5s;" visibility="hidden">Jugular</text>
+
+              <!-- ══════ ARTÉRIA RADIAL ══════ -->
+              <path class="ap" id="a1"
+                d="M98 332 Q95 262 96 197 Q97 142 96 82 Q96 46 97 10"
+                stroke="#93c5fd" stroke-width="4" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .5s;filter:url(#artGlow);" visibility="hidden"/>
+              <!-- Artéria Ulnar (paralela) -->
+              <path class="ap" id="a2"
+                d="M88 332 Q86 262 87 197 Q88 142 87 82 Q87 46 88 10"
+                stroke="#60a5fa" stroke-width="3" stroke-linecap="round" fill="none"
+                style="opacity:0;transition:opacity .5s;filter:url(#artGlow);" visibility="hidden"/>
+              <!-- Artery danger pulse ring — suave, 1.1s -->
+              <ellipse id="art-danger-ring" cx="97" cy="160" rx="16" ry="22"
+                fill="url(#arteryRiskGrad)" opacity="0" style="transition:opacity .4s;" visibility="hidden">
+                <animate attributeName="rx" values="12;20;12" dur="1.1s" repeatCount="indefinite"/>
+                <animate attributeName="ry" values="18;28;18" dur="1.1s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.45;0;0.45" dur="1.1s" repeatCount="indefinite"/>
+              </ellipse>
+
+              <!-- ══════ PATHOLOGIES ══════ -->
+
+              <!-- FLEBITE — edema + hiperemia local -->
+              <!-- Camada 1: halo de edema externo (grande, difuso) -->
+              <ellipse id="edema-outer" cx="62" cy="155" rx="38" ry="28"
+                fill="rgba(239,68,68,.22)" style="display:none;filter:url(#edemaGlow);" visibility="hidden"/>
+              <!-- Camada 2: edema subcutâneo médio -->
+              <ellipse id="edema-mid" cx="62" cy="155" rx="26" ry="19"
+                fill="rgba(239,68,68,.35)" style="display:none;filter:url(#edemaGlow);" visibility="hidden"/>
+              <!-- Camada 3: hiperemia superficial (mais opaca) -->
+              <ellipse id="edema-inner" cx="62" cy="155" rx="16" ry="12"
+                fill="rgba(220,38,38,.55)" style="display:none;" visibility="hidden">
+                <animate attributeName="opacity" values="0.55;0.3;0.55" dur="2.5s" repeatCount="indefinite"/>
+              </ellipse>
+              <!-- Marcador cruzes de flebite -->
+              <g id="phlebitis-marks" style="display:none;" visibility="hidden">
+                <circle cx="52" cy="148" r="2.5" fill="#ef4444" opacity=".8"/>
+                <circle cx="72" cy="162" r="2" fill="#ef4444" opacity=".7"/>
+                <circle cx="58" cy="165" r="1.8" fill="#dc2626" opacity=".9"/>
+              </g>
+
+              <!-- ESTENOSE — estreitamento do vaso -->
+              <!-- Nó estenótico cefálico -->
+              <ellipse class="scp" id="p1" cx="62" cy="130" rx="9" ry="5"
+                fill="#f59e0b" stroke="#fbbf24" stroke-width=".8" visibility="hidden"/>
+              <!-- Nó estenótico cefálico distal -->
+              <ellipse class="scp" id="p2" cx="65" cy="207" rx="7" ry="4"
+                fill="#f59e0b" stroke="#fbbf24" stroke-width=".8" visibility="hidden"/>
+              <!-- Nó estenótico proximal -->
+              <ellipse class="scp" id="p3" cx="70" cy="74" rx="6" ry="3.5"
+                fill="#ef9f27" stroke="#fbbf24" stroke-width=".8" visibility="hidden"/>
+              <!-- Nó estenótico basílico -->
+              <ellipse class="scp" id="p4" cx="143" cy="127" rx="8" ry="4"
+                fill="#f59e0b" stroke="#fbbf24" stroke-width=".8" visibility="hidden"/>
+              <ellipse class="scp" id="p5" cx="148" cy="192" rx="6" ry="3"
+                fill="#ef9f27" stroke="#fbbf24" stroke-width=".8" visibility="hidden"/>
+              <!-- Segmento estenótico (afunilamento visual no vaso) -->
+              <path id="stenosis-segment" d="M60 120 Q66 130 60 140"
+                stroke="#f59e0b" stroke-width="2" stroke-linecap="round" fill="none"
+                opacity="0" style="transition:opacity .4s;filter:url(#stenosisGlow);" visibility="hidden"/>
+
+              <!-- HIPOVOLEMIA — veias colapsadas (linhas finas tracejadas) -->
+              <path id="hypo-v1" d="M66 332 Q62 282 60 232 Q57 177 62 132 Q66 97 70 62 Q73 32 75 10"
+                stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"
+                stroke-dasharray="6 4" opacity="0" style="transition:opacity .5s;" visibility="hidden"/>
+              <path id="hypo-v2" d="M142 332 Q146 282 148 232 Q151 177 146 132 Q142 97 138 62 Q135 32 133 10"
+                stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"
+                stroke-dasharray="6 4" opacity="0" style="transition:opacity .5s;" visibility="hidden"/>
+
+              <!-- IR scan sweep -->
+              <rect id="ir-scan" x="35" y="0" width="135" height="3" rx="1.5"
+                fill="rgba(0,255,200,.4)" style="display:none;"/>
+            </svg>
+            <div class="ia-bar">
+              <div class="ia-lbl" id="ia-lbl">IA VASCULAR</div>
+              <div class="ia-conf">Conf. <span class="ia-cv" id="ia-cv">—</span></div>
+            </div>
+          </div>
+
+          <!-- Card de Status Flutuante/Telemetria -->
+          <div id="scanner-status-card"
+            style="margin: 8px 16px 0; padding: 12px; background: var(--s1); border: .5px solid var(--b1); border-left: 6px solid var(--b2); border-radius: var(--r); transition: all 0.25s ease;">
+            <div id="scanner-msg" style="color: var(--t2); font-weight: 600; font-size: 13px;">
+              Aponte a mira para a fístula do paciente...
+            </div>
+            <div id="scanner-metrics"
+              style="font-size: 11px; color: var(--t3); margin-top: 4px; font-family: monospace;">
+              Aguardando sinal estável do bracelete Vult-Vein...
+            </div>
+          </div>
+
+          <div class="scan-alert danger" id="al-art" style="display:none;">⚠️ Artéria identificada na rota — risco de
+            punção arterial. Reposicione.</div>
+          <div class="scan-alert danger" id="al-fl" style="display:none;">🚫 Flebite detectada · Sítio contraindicado.
+            Alterne o membro.</div>
+          <div class="scan-alert warn" id="al-es" style="display:none;">⚠️ Esclerose vascular · Calcificações visíveis ·
+            Selecione vaso alternativo.</div>
+
+          <!-- ═══ PAINEL DE CONTROLE DO SIMULADOR VULT-VEIN ═══ -->
+          <div class="scan-ctrls" style="padding: 12px 16px;">
+
+            <!-- Linha 1: On/Off + membro -->
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <button id="btn-toggle-sim" onclick="toggleSimulator()" style="flex:1; padding:8px 12px; border-radius:var(--r); border:1.5px solid var(--b1);
+                   background:var(--s); color:#fff; font-weight:700; font-size:12px;
+                   cursor:pointer; transition:all .2s;">
+                ▶ Ligar Simulador
+              </button>
+              <select id="sim-member-select" onchange="deviceSimulator.setMember(this.value)" style="padding:8px; border-radius:var(--r); border:1px solid var(--b1);
+                   background:var(--b2); color:var(--t1); font-size:12px; cursor:pointer;">
+                <option value="MSD">MSD</option>
+                <option value="MSE">MSE</option>
+              </select>
+            </div>
+
+            <!-- Linha 2: Cenários clínicos -->
+            <div style="font-size:10px; color:var(--t3); font-weight:600; text-transform:uppercase;
+                    letter-spacing:.5px; margin-bottom:6px;">Cenário do dispositivo</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px;">
+
+              <button class="sim-btn sim-scenario-btn" data-scenario="HEALTHY_FAV"
+                onclick="setSimulatorScenario('HEALTHY_FAV')">
+                <div class="sdot dv"></div>FAV Saudável
+              </button>
+
+              <button class="sim-btn sim-scenario-btn" data-scenario="ARTERY_RISK"
+                onclick="setSimulatorScenario('ARTERY_RISK')">
+                <div class="sdot da"></div>Risco Arterial
+              </button>
+
+              <button class="sim-btn sim-scenario-btn" data-scenario="PHLEBITIS"
+                onclick="setSimulatorScenario('PHLEBITIS')">
+                <div class="sdot df"></div>Flebite + Edema
+              </button>
+
+              <button class="sim-btn sim-scenario-btn" data-scenario="STENOSIS"
+                onclick="setSimulatorScenario('STENOSIS')">
+                <div class="sdot de"></div>Estenose Crítica
+              </button>
+
+              <button class="sim-btn sim-scenario-btn" data-scenario="HYPOVOLEMIA"
+                onclick="setSimulatorScenario('HYPOVOLEMIA')">
+                <div class="sdot" style="background:var(--w);"></div>Hipovolemia
+              </button>
+
+              <button class="sim-btn sim-scenario-btn" data-scenario="ROTATION_SITE"
+                onclick="setSimulatorScenario('ROTATION_SITE')">
+                <div class="sdot" style="background:#a78bfa;"></div>Rodízio (48h)
+              </button>
+
+              <button class="sim-btn sim-scenario-btn" data-scenario="JUGULAR"
+                onclick="setSimulatorScenario('JUGULAR')" style="grid-column:span 2;background:linear-gradient(135deg,rgba(147,197,253,.08),rgba(244,114,182,.05));border-color:#60a5fa;">
+                <div class="sdot" style="background:#60a5fa;"></div>
+                <span style="color:#60a5fa;">Jugular — Acesso Especial (MD/ENF)</span>
+              </button>
+
+            </div>
+
+            <!-- Linha 3: Painel debug do payload bruto do sensor -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <div
+                style="font-size:10px; color:var(--t3); font-weight:600; text-transform:uppercase; letter-spacing:.5px;">
+                Payload do sensor (debug)</div>
+              <button onclick="
+            const p = document.getElementById('debug-payload-panel');
+            p.style.display = p.style.display === 'none' ? 'block' : 'none';
+          " style="font-size:10px; padding:2px 8px; border-radius:20px; border:1px solid var(--b1); background:var(--b2); color:var(--t2); cursor:pointer;">ver</button>
+            </div>
+            <div id="debug-payload-panel" style="display:none; background:var(--b1); border-radius:var(--rsm);
+                 padding:10px; max-height:260px; overflow-y:auto;">
+              <span style="color:var(--t3); font-size:10px; font-family:monospace;">Ligue o simulador para ver os
+                payloads em tempo real...</span>
+            </div>
+
+          </div>
+
+          <button class="btn-reg" id="btn-reg" onclick="openPuncao()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <span id="btn-reg-txt">Registrar Punção no e-SUS</span>
+          </button>
+        </div>
+
+        <!-- SINAIS VITAIS -->
+        <div class="scr" id="scr-vitais">
+          <div class="tab-header">
+            <h2>Sinais Vitais</h2>
+            <p>Monitoramento em tempo real via Vult-Vein</p>
+          </div>
+
+          <!-- Live metrics grid -->
+          <div style="padding:0 16px;display:flex;flex-direction:column;gap:10px;">
+
+            <!-- Heart rate card with waveform -->
+            <div style="background:var(--s1);border:.5px solid var(--b1);border-radius:var(--r);padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                <div>
+                  <div
+                    style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;">
+                    Frequência Cardíaca</div>
+                  <div style="display:flex;align-items:baseline;gap:4px;margin-top:4px;">
+                    <span style="font-size:36px;font-weight:700;color:#e11d48;line-height:1;" id="hr-val">72</span>
+                    <span style="font-size:13px;color:var(--t2);">bpm</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--s);font-weight:600;margin-top:2px;">● Normal (60–100 bpm)</div>
+                </div>
+                <div
+                  style="background:rgba(225,29,72,.08);border:.5px solid rgba(225,29,72,.3);border-radius:var(--rsm);padding:6px 10px;text-align:center;">
+                  <div style="font-size:10px;color:var(--t3);font-weight:600;">Fonte</div>
+                  <div style="font-size:11px;font-weight:700;color:#e11d48;">PPG · IR</div>
+                </div>
+              </div>
+              <!-- ECG-style waveform -->
+              <svg width="100%" height="52" viewBox="0 0 320 52" preserveAspectRatio="none" id="ecg-svg">
+                <path id="ecg-path"
+                  d="M0 30 L30 30 L38 30 L42 10 L46 48 L50 28 L56 30 L90 30 L98 30 L102 10 L106 48 L110 28 L116 30 L150 30 L158 30 L162 10 L166 48 L170 28 L176 30 L210 30 L218 30 L222 10 L226 48 L230 28 L236 30 L270 30 L278 30 L282 10 L286 48 L290 28 L296 30 L320 30"
+                  fill="none" stroke="#e11d48" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                  style="stroke-dasharray:800;stroke-dashoffset:800;" />
+              </svg>
+            </div>
+
+            <!-- SpO2 card -->
+            <div style="background:var(--s1);border:.5px solid var(--b1);border-radius:var(--r);padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div>
+                  <div
+                    style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;">
+                    Saturação de O₂ (SpO₂)</div>
+                  <div style="display:flex;align-items:baseline;gap:4px;margin-top:4px;">
+                    <span style="font-size:36px;font-weight:700;color:#2563eb;line-height:1;" id="spo2-val">98</span>
+                    <span style="font-size:13px;color:var(--t2);">%</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--s);font-weight:600;margin-top:2px;">● Excelente (≥ 95%)</div>
+                </div>
+                <div style="position:relative;width:64px;height:64px;">
+                  <svg width="64" height="64" viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="26" fill="none" stroke="var(--b1)" stroke-width="5" />
+                    <circle cx="32" cy="32" r="26" fill="none" stroke="#2563eb" stroke-width="5"
+                      stroke-dasharray="163.4" stroke-dashoffset="3.3" stroke-linecap="round"
+                      transform="rotate(-90 32 32)" />
+                  </svg>
+                  <div
+                    style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;">
+                    98%</div>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--t3);margin-top:8px;">Sensor MAX30102 · LED Vermelho 660nm + IR
+                940nm integrado ao Vult-Vein</div>
+            </div>
+
+            <!-- Temperature card -->
+            <div style="background:var(--s1);border:.5px solid var(--b1);border-radius:var(--r);padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                <div>
+                  <div
+                    style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;">
+                    Temperatura do Membro</div>
+                  <div style="display:flex;align-items:baseline;gap:4px;margin-top:4px;">
+                    <span style="font-size:36px;font-weight:700;color:#059669;line-height:1;" id="temp-val">36.8</span>
+                    <span style="font-size:13px;color:var(--t2);">°C</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--s);font-weight:600;margin-top:2px;">● Normal · Sem sinais de
+                    isquemia</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div
+                    style="width:10px;height:56px;border-radius:5px;background:var(--s2);overflow:hidden;position:relative;">
+                    <div
+                      style="position:absolute;bottom:0;width:100%;height:62%;background:linear-gradient(to top,#059669,#34d399);border-radius:5px;"
+                      id="temp-bar"></div>
+                  </div>
+                  <div style="font-size:9px;color:var(--t3);">42°C</div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div style="background:var(--s2);border-radius:var(--rsm);padding:8px;text-align:center;">
+                  <div style="font-size:10px;color:var(--t3);">Alerta Isquemia</div>
+                  <div style="font-size:12px;font-weight:600;color:var(--d);">&lt; 32°C</div>
+                </div>
+                <div style="background:var(--s2);border-radius:var(--rsm);padding:8px;text-align:center;">
+                  <div style="font-size:10px;color:var(--t3);">Alerta Inflamação</div>
+                  <div style="font-size:12px;font-weight:600;color:var(--w);">&gt; 38.5°C</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Disponível na v2 notice -->
+            <div
+              style="background:var(--wl);border:.5px solid var(--w);border-radius:var(--rsm);padding:10px 14px;font-size:12px;color:var(--w);font-weight:600;line-height:1.5;">
+              ⚡ FC e SpO₂ disponíveis via sensor MAX30102 adicionado ao Vult-Vein v2. Temperatura já ativa via NTC
+              integrado.
+            </div>
+
+            <button class="btn-save" style="margin-bottom:4px;" onclick="startVitalsDemo()">▶ Iniciar Simulação ao
+              Vivo</button>
+          </div>
+        </div>
+
+        <!-- HISTÓRICO -->
+        <div class="scr" id="scr-historico">
+          <div class="tab-header">
+            <h2>Auditoria e-SUS</h2>
+            <p>Prontuário eletrônico · RNDS sincronizado</p>
+          </div>
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-v" id="st-total" style="color:var(--veia)">12</div>
+              <div class="stat-l">Procedimentos</div>
+            </div>
+            <div class="stat">
+              <div class="stat-v" id="st-ok" style="color:var(--s)">10</div>
+              <div class="stat-l">Bem-sucedidos</div>
+            </div>
+            <div class="stat">
+              <div class="stat-v" id="st-inter" style="color:var(--w)">2</div>
+              <div class="stat-l">Intercorrências</div>
+            </div>
+          </div>
+          <div class="plist" id="plist">
+            <div class="pcard"
+              onclick="openAudit('Maria de Souza Santos','123.***.**-00','09/06/2026 14:32','Enf. Cibele Reis','COREN-SP 123.456-ENF','bi','Veia Íntegra','Realizada punção venosa periférica com sucesso na 1ª tentativa em MSD, com cateter Jelco 22G, sob auxílio VULT-SCAN. Procedimento transcorreu sem intercorrências assistenciais. Resp: Enf. Cibele Reis — COREN-SP 123.456-ENF.')">
+              <div>
+                <div class="pname">Maria de Souza Santos</div>
+                <div class="psub">123.***.**-00 · 09/06/2026 14:32</div>
+                <div class="psync">✓ Sincronizado e-SUS (PEC)</div>
+              </div>
+              <span class="badge bi">Íntegra</span>
+            </div>
+            <div class="pcard"
+              onclick="openAudit('Pedro Lima Alencar','987.***.**-11','08/06/2026 09:15','Enf. Cibele Reis','COREN-SP 123.456-ENF','bc','Hipovolemia','Punção em MSD na 1ª tentativa, Jelco 24G. Observado colapso de vaso compatível com hipovolemia. Resp: Enf. Cibele Reis — COREN-SP 123.456-ENF.')">
+              <div>
+                <div class="pname">Pedro Lima Alencar</div>
+                <div class="psub">987.***.**-11 · 08/06/2026 09:15</div>
+                <div class="psync">✓ Sincronizado e-SUS (PEC)</div>
+              </div>
+              <span class="badge bc">Hipovolemia</span>
+            </div>
+            <div class="pcard"
+              onclick="openAudit('Adalberto Cavalcanti Silva','777.***.**-11','07/06/2026 16:47','Enf. Cibele Reis','COREN-SP 123.456-ENF','bn','FAV Bloqueado','Punção bloqueada por protocolo de segurança. FAV ativa identificada em MSE via ConecteSUS. Resp: Enf. Cibele Reis — COREN-SP 123.456-ENF.')">
+              <div>
+                <div class="pname">Adalberto Cavalcanti Silva</div>
+                <div class="psub">777.***.**-11 · 07/06/2026 16:47</div>
+                <div class="psync">✓ Sincronizado e-SUS (PEC)</div>
+              </div>
+              <span class="badge bn">Bloqueado</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PULSEIRA -->
+        <div class="scr" id="scr-pulseira">
+          <div class="tab-header">
+            <h2>Vult-Vein</h2>
+            <p>Bracelete assistivo · BLE 5.0 + WiFi</p>
+          </div>
+          <!-- Device card -->
+          <div class="device-card">
+            <div class="device-top">
+              <div class="device-icon">
+                <svg viewBox="0 0 24 24">
+                  <rect x="5" y="2" width="14" height="20" rx="4" />
+                  <circle cx="12" cy="17" r="1.5" />
+                  <path d="M9 7h6M9 11h4" />
+                </svg>
+              </div>
+              <div>
+                <div class="device-name">Vult-Vein v2.4</div>
+                <div class="device-sub">Firmware BLE 2.4.1 · TPU Médico</div>
+                <div class="conn-badge conn-on">● Conectado</div>
+              </div>
+            </div>
+            <!-- Métricas -->
+            <div class="metrics-grid">
+              <div class="metric">
+                <div class="metric-label">Bateria</div>
+                <div class="metric-val">85<span class="metric-unit">%</span></div>
+                <div class="bat-bar">
+                  <div class="bat-fill" style="width:85%"></div>
+                </div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Temperatura</div>
+                <div class="metric-val">37.1<span class="metric-unit">°C</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">IR Infravermelho</div>
+                <div class="metric-val" style="color:var(--s)">Ativo</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Turmalina</div>
+                <div class="metric-val" style="color:var(--s)">Aquec.</div>
+              </div>
+            </div>
+            <!-- Conectividade -->
+            <div class="fgroup-title" style="margin-bottom:8px;">Modo de Conexão</div>
+            <div class="conn-opts">
+              <div class="conn-opt">
+                <div class="conn-opt-left">
+                  <div class="conn-opt-icon bt-icon-bg">
+                    <svg viewBox="0 0 24 24">
+                      <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
+                    </svg>
+                  </div>
+                  <div>Bluetooth LE 5.0<div class="conn-opt-sub">Alcance até 30m · Baixo consumo</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="signal-bars">
+                    <span class="sig-w" style="height:6px"></span>
+                    <span class="sig-w" style="height:10px"></span>
+                    <span class="sig-w" style="height:14px"></span>
+                    <span class="sig-w" style="height:16px"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="conn-opt">
+                <div class="conn-opt-left">
+                  <div class="conn-opt-icon wifi-icon-bg">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                      <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                      <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                      <circle cx="12" cy="20" r="1" />
+                    </svg>
+                  </div>
+                  <div>WiFi Direct<div class="conn-opt-sub">Para streaming de vídeo IR</div>
+                  </div>
+                </div>
+                <button class="btn-connect" onclick="toast('Conectando via WiFi...')">Conectar</button>
+              </div>
+            </div>
+          </div>
+          <!-- Localização -->
+          <div class="loc-card">
+            <div class="loc-title">Localização do Bracelete</div>
+            <div class="loc-map">
+              <div class="loc-map-grid"></div>
+              <div class="loc-pin"></div>
+            </div>
+            <div class="loc-info">
+              <span>Último sinal</span><strong>há 12 segundos</strong>
+            </div>
+            <div class="loc-info" style="margin-top:4px;">
+              <span>Setor estimado</span><strong>UTI Adulto — 3º Andar</strong>
+            </div>
+          </div>
+          <!-- Log de eventos -->
+          <div class="fgroup-title" style="padding:0 16px;margin-bottom:8px;">Histórico de Eventos</div>
+          <div class="history-log">
+            <div class="log-item">
+              <div class="log-dot log-ok"></div>Bracelete pareado com sucesso<span class="log-time">09:41</span>
+            </div>
+            <div class="log-item">
+              <div class="log-dot log-ok"></div>IR ativado · Vasodilatação iniciada<span class="log-time">09:42</span>
+            </div>
+            <div class="log-item">
+              <div class="log-dot log-warn"></div>Temperatura: pico 37.6°C — normalizada<span
+                class="log-time">10:15</span>
+            </div>
+            <div class="log-item">
+              <div class="log-dot log-ok"></div>Sincronização BLE · RSSI -52 dBm<span class="log-time">14:30</span>
+            </div>
+            <div class="log-item">
+              <div class="log-dot log-err"></div>Perda de sinal BLE · Reconectado em 3s<span
+                class="log-time">15:02</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- NAV -->
+        <div class="nav">
+          <button class="ntab active" id="nt-cad" onclick="switchTab('cadastro')">
+            <svg viewBox="0 0 24 24">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>Perfil
+          </button>
+          <button class="ntab" id="nt-scan" onclick="switchTab('scanner')">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>Scanner
+          </button>
+          <button class="ntab" id="nt-vita" onclick="switchTab('vitais')">
+            <svg viewBox="0 0 24 24">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>Vitais
+          </button>
+          <button class="ntab" id="nt-hist" onclick="switchTab('historico')">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="10" />
+            </svg>Histórico
+          </button>
+          <button class="ntab" id="nt-pulv" onclick="switchTab('pulseira')">
+            <svg viewBox="0 0 24 24">
+              <rect x="5" y="2" width="14" height="20" rx="4" />
+              <circle cx="12" cy="17" r="1.5" />
+            </svg>Pulseira
+          </button>
+        </div>
+      </div><!-- /pg-app -->
+    </div><!-- /phone -->
+
+    <!-- ============ MODAL PUNÇÃO ============ -->
+    <div class="mbackdrop" id="m-puncao">
+      <div class="msheet">
+        <div class="mhandle"></div>
+        <div id="m-title" class="mtitle">Nova Punção · e-SUS</div>
+
+        <!-- Banner jugular (aparece só no cenário jugular) -->
+        <div id="m-jug-banner" style="display:none;background:linear-gradient(135deg,rgba(96,165,250,.12),rgba(244,114,182,.08));
+          border:1px solid #60a5fa;border-radius:var(--rsm);padding:10px 12px;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:800;color:#60a5fa;margin-bottom:3px;">🩺 Acesso Jugular Externo</div>
+          <div style="font-size:11px;color:var(--t2);line-height:1.5;">Profissional responsável: <strong style="color:var(--t1);">Enf./Dr. Marcos Guerra — COREN-SP 987.321-ENF</strong><br>
+          Protocolo cervical · Antissepsia obrigatória · Decúbito dorsal</div>
+        </div>
+
+        <div class="demo-tip" id="m-demo-tip">DEMO · CPF <strong>111</strong> = alergia · <strong>777</strong> = FAV renal · qualquer outro = padrão</div>
+
+        <label class="flabel">CPF do Paciente (Chave e-SUS)</label>
+        <div class="esus-row">
+          <input type="text" class="finput" id="m-cpf" placeholder="000.000.000-00" style="margin-bottom:0;" oninput="fmtCPF(this)"/>
+          <button class="esus-btn" onclick="buscarESUS()">Buscar e-SUS</button>
+        </div>
+        <div class="loader-row" id="m-loader"><div class="spinner"></div>Consultando RNDS...</div>
+        <div class="esus-res" id="m-res">
+          <div class="esus-res-name" id="m-res-name">—</div>
+          <div id="m-res-alert" style="margin-top:6px;font-size:12px;"></div>
+        </div>
+        <div class="fav-block" id="m-fav">🚫 RESTRIÇÃO ABSOLUTA · FAV ativa em MSE · Punção proibida neste membro</div>
+
+        <div class="f2col">
+          <div><label class="flabel">Tentativa</label>
+            <select class="fselect" id="m-tent">
+              <option>1ª tentativa</option><option>2ª tentativa</option><option>3ª tentativa</option>
+            </select>
+          </div>
+          <div><label class="flabel" id="m-memb-lbl">Membro</label>
+            <select class="fselect" id="m-memb" onchange="chkFAV()">
+              <!-- opções trocadas dinamicamente via JS -->
+              <option value="MSD">MSD — Direito</option>
+              <option value="MSE">MSE — Esquerdo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="f2col">
+          <div><label class="flabel" id="m-jelco-lbl">Calibre Jelco</label>
+            <select class="fselect" id="m-jelco">
+              <option>Jelco 22G (Azul)</option>
+              <option>Jelco 24G (Amarelo)</option>
+              <option>Jelco 20G (Rosa)</option>
+              <option value="Jelco 16G (Cinza)">Jelco 16G (Cinza) ← Jugular</option>
+              <option>Jelco 18G (Verde)</option>
+            </select>
+          </div>
+          <div><label class="flabel">Intercorrência</label>
+            <select class="fselect" id="m-inter">
+              <option value="sem intercorrências">Sem intercorrências</option>
+              <option value="fragilidade capilar / hematoma">Hematoma local</option>
+              <option value="colapso de vaso por hipovolemia">Colapso / Hipovolemia</option>
+              <option value="espasmo venoso local">Espasmo venoso</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mfooter">
+          <button class="btn-cancel" onclick="closeM('m-puncao')">Cancelar</button>
+          <button class="btn-ok" id="m-ok" onclick="registrar()">💾 Validar no e-SUS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL AUDITORIA ============ -->
+    <div class="mbackdrop" id="m-audit">
+      <div class="msheet">
+        <div class="mhandle"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="mtitle" style="margin-bottom:0;" id="a-name">—</div>
+          <span class="badge" id="a-badge">—</span>
+        </div>
+        <div class="audit-grid">
+          <div class="acell">
+            <div class="acell-l">CPF</div>
+            <div class="acell-v" id="a-cpf">—</div>
+          </div>
+          <div class="acell">
+            <div class="acell-l">Data</div>
+            <div class="acell-v" id="a-data">—</div>
+          </div>
+          <div class="acell" style="grid-column:span 2">
+            <div class="acell-l">Operador</div>
+            <div class="acell-v" id="a-op">—</div>
+          </div>
+          <div class="acell" style="grid-column:span 2">
+            <div class="acell-l">Diagnóstico</div>
+            <div class="acell-v" id="a-proc">—</div>
+          </div>
+        </div>
+        <div class="flabel" style="margin-bottom:6px;">Anotação de Enfermagem (COFEN)</div>
+        <div class="note-box" id="a-note">—</div>
+        <button class="btn-copy" onclick="copyNote()">📋 Copiar Anotação para Prontuário</button>
+        <button class="btn-copy" onclick="closeM('m-audit')">Fechar</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast-el">Salvo!</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// VultScoreEngine.js — Motor de avaliação clínica vascular
+// Calcula viabilidade de punção com regras clínicas determinísticas
+// ═══════════════════════════════════════════════════════════════
+class VultScoreEngine {
+  static THRESHOLDS = {
+    DIAMETER: { IDEAL_MIN: 4.5, IDEAL_MAX: 9.0, WARN_MIN: 3.0, CRITICAL_MIN: 2.0 },
+    DEPTH:    { IDEAL_MIN: 2.5, IDEAL_MAX: 7.0, WARN_MAX: 9.0 },
+    RECENT_PUNCTURE_PENALTY: 0.35,
+  };
+
+  static evaluateNode(node) {
+    const { diameter_mm, depth_mm, recent_puncture, vessel_type } = node;
+    const T = this.THRESHOLDS;
+    let score = 1.0;
+    let issues = [];
+    let structuralAlert = null;
+
+    // Vessel type check
+    if (vessel_type === 'artery') {
+      return { score: 0, color: '#1d4ed8', status: 'ARTERY_RISK',
+        message: '⚠️ Estrutura arterial identificada — risco de punção arterial',
+        blockPuncture: true, alertLevel: 'CRITICAL' };
+    }
+
+    // Diameter scoring
+    if (diameter_mm < T.DIAMETER.CRITICAL_MIN) {
+      score -= 0.8; issues.push('estenose crítica');
+      structuralAlert = { type: 'STENOSIS', severity: 'CRITICAL',
+        title: 'Estenose Crítica Detectada',
+        desc: `Diâmetro ${diameter_mm.toFixed(1)}mm — abaixo do limiar mínimo seguro de ${T.DIAMETER.CRITICAL_MIN}mm` };
+    } else if (diameter_mm < T.DIAMETER.WARN_MIN) {
+      score -= 0.45; issues.push('estenose moderada');
+      structuralAlert = { type: 'STENOSIS', severity: 'WARNING',
+        title: 'Estenose Moderada',
+        desc: `Diâmetro ${diameter_mm.toFixed(1)}mm — zona de atenção (ideal: ${T.DIAMETER.IDEAL_MIN}–${T.DIAMETER.IDEAL_MAX}mm)` };
+    } else if (diameter_mm > T.DIAMETER.IDEAL_MAX * 1.5) {
+      score -= 0.3; issues.push('dilatação aneurismática');
+      structuralAlert = { type: 'ANEURYSM', severity: 'WARNING',
+        title: 'Dilatação Aneurismática',
+        desc: `Diâmetro ${diameter_mm.toFixed(1)}mm — expansão vascular suspeita` };
+    } else if (diameter_mm >= T.DIAMETER.IDEAL_MIN && diameter_mm <= T.DIAMETER.IDEAL_MAX) {
+      score += 0.05;
+    }
+
+    // Depth scoring
+    if (depth_mm > T.DEPTH.WARN_MAX) {
+      score -= 0.5; issues.push('profundidade excessiva');
+    } else if (depth_mm > T.DEPTH.IDEAL_MAX) {
+      score -= 0.2; issues.push('vaso profundo');
+    } else if (depth_mm < T.DEPTH.IDEAL_MIN) {
+      score -= 0.1; issues.push('vaso muito superficial');
+    }
+
+    // Recent puncture penalty
+    if (recent_puncture) { score -= T.RECENT_PUNCTURE_PENALTY; issues.push('reuso recente (<48h)'); }
+
+    score = Math.max(0, Math.min(1, score));
+
+    // Map score to clinical status
+    let status, color, message, blockPuncture = false, alertLevel = 'NONE';
+    if (score >= 0.70) {
+      status = 'ZONA_IDEAL'; color = '#16a34a';
+      message = `✅ Zona segura — Ø ${diameter_mm.toFixed(1)}mm · Prof. ${depth_mm.toFixed(1)}mm`;
+    } else if (score >= 0.45) {
+      status = 'ALERTA'; color = '#d97706'; alertLevel = 'WARNING';
+      message = `⚠️ Atenção: ${issues.join(', ')}`;
+    } else {
+      status = 'CRITICO'; color = '#dc2626'; blockPuncture = true; alertLevel = 'CRITICAL';
+      message = `🚫 Contraindicado: ${issues.join(', ')}`;
+    }
+
+    return { score, color, status, message, blockPuncture, alertLevel, structuralAlert,
+      details: { diameter_mm, depth_mm, recent_puncture, issues } };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VultAlertConsolidator.js — Fusão de alertas térmicos + estruturais
+// Evita fadiga de alarmes — consolida tudo num único card
+// ═══════════════════════════════════════════════════════════════
+class VultAlertConsolidator {
+  static PRIORITY = { STENOSIS_CRITICAL:10, ANEURYSM:9, ARTERY_RISK:8,
+    HYPO_STEAL:7, PHLEBITIS:6, STENOSIS_WARNING:5, HYPOVOLEMIA:4,
+    ROTATION_SITE:3, HYPERTHERMIA:2, RECENT_PUNCTURE:1 };
+
+  static consolidate(scoreResult, thermalData, scenarioKey) {
+    const alerts = [];
+
+    // Structural alerts from ScoreEngine
+    if (scoreResult.structuralAlert) {
+      const sa = scoreResult.structuralAlert;
+      alerts.push({ priority: this.PRIORITY[sa.type] || 5,
+        icon: sa.severity === 'CRITICAL' ? '🚫' : '⚠️',
+        title: sa.title, desc: sa.desc, level: sa.severity });
+    }
+
+    // Thermal alerts
+    if (thermalData) {
+      const temp = thermalData.temperature_celsius;
+      if (!thermalData.gradient_ok) {
+        alerts.push({ priority: this.PRIORITY.HYPO_STEAL, icon: '🧊',
+          title: 'Síndrome do Roubo de Fluxo',
+          desc: `Gradiente térmico anormal detectado — isquemia periférica possível`,
+          level: 'CRITICAL' });
+      } else if (temp < 33.0) {
+        alerts.push({ priority: this.PRIORITY.HYPO_STEAL, icon: '🧊',
+          title: 'Hipotermia Local Detectada',
+          desc: `Temperatura ${temp.toFixed(1)}°C — abaixo do limiar de isquemia (33°C)`,
+          level: 'CRITICAL' });
+      } else if (temp > 38.2) {
+        alerts.push({ priority: this.PRIORITY.PHLEBITIS, icon: '🌡️',
+          title: 'Hipertermia / Possível Flebite',
+          desc: `Temperatura ${temp.toFixed(1)}°C — zona de atenção inflamatória (>38.2°C)`,
+          level: 'WARNING' });
+      }
+    }
+
+    // Scenario-specific alerts
+    const scenarioAlerts = {
+      'PHLEBITIS': { priority: this.PRIORITY.PHLEBITIS, icon: '🔴',
+        title: 'Flebite Ativa Detectada',
+        desc: 'Sinais flogísticos presentes — punção contraindicada neste sítio', level: 'CRITICAL' },
+      'HYPOVOLEMIA': { priority: this.PRIORITY.HYPOVOLEMIA, icon: '💧',
+        title: 'Hipovolemia / Colapso Vascular',
+        desc: 'Volume circulatório reduzido — veias colapsadas. Hidratação recomendada antes da punção', level: 'WARNING' },
+      'ROTATION_SITE': { priority: this.PRIORITY.ROTATION_SITE, icon: '🔄',
+        title: 'Rodízio de Sítio Necessário',
+        desc: 'Punção recente (<48h) neste segmento — protocolo de rodízio ativo', level: 'WARNING' },
+    };
+    if (scenarioAlerts[scenarioKey]) alerts.push(scenarioAlerts[scenarioKey]);
+
+    // Sort by priority descending
+    alerts.sort((a, b) => b.priority - a.priority);
+    const topAlert = alerts[0] || null;
+    const blockPuncture = scoreResult.blockPuncture || alerts.some(a => a.level === 'CRITICAL');
+
+    return { alerts, topAlert, blockPuncture, count: alerts.length };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VultNarrativeEngine.js — Gerador de anotação COFEN automática
+// ═══════════════════════════════════════════════════════════════
+class VultNarrativeEngine {
+
+  // Anotação padrão COFEN para punção venosa periférica em MMSS
+  static generate(params) {
+    const { patientName, cpfMask, dateStr, operator, reg, member, attempt,
+      jelco, intercurrence, scoreResult, isSUS } = params;
+
+    const statusMap = {
+      'ZONA_IDEAL': 'com vaso em zona segura de punção (score IA: ' + (scoreResult.score * 100).toFixed(0) + '%)',
+      'ALERTA': 'com alerta vascular identificado pelo sistema IA (' + (scoreResult.details.issues||[]).join(', ') + ')',
+      'CRITICO': 'sendo o sítio classificado como contraindicado pelo sistema IA',
+      'ARTERY_RISK': 'com identificação de risco arterial pelo sistema — punção suspensa',
+    };
+
+    const vasStatus = statusMap[scoreResult.status] || '';
+    const syncMsg = isSUS
+      ? 'Laudo vascular e dados técnicos enviados ao prontuário eletrônico nacional (e-SUS/PEC) via RNDS.'
+      : 'Registro salvo localmente no dispositivo (Acesso Livre — sem integração e-SUS).';
+
+    return `Em ${dateStr}, realizada avaliação de acesso venoso periférico em ${member} ${vasStatus}. ` +
+      `Procedida punção na ${attempt}, com cateter ${jelco}, sob auxílio de mapeamento vascular por infravermelho VULT-SCAN em tempo real. ` +
+      `Procedimento transcorreu ${intercurrence === 'sem intercorrências' ? 'sem intercorrências assistenciais' : 'com intercorrência: ' + intercurrence}. ` +
+      `${syncMsg} ` +
+      `Resp.: ${operator} — ${reg}.`;
+  }
+
+  // Anotação padrão COFEN para PUNÇÃO JUGULAR EXTERNA
+  // Baseada no padrão textual COFEN enviado pelo usuário
+  static generateJugular(params) {
+    const { dateStr, operator, reg, attempt, jelco, intercurrence, member, memberLabel, isSUS } = params;
+    const viaText = memberLabel || (member === 'MSE' ? 'veia jugular externa esquerda' : 'veia jugular externa direita');
+    const semInter = intercurrence === 'sem intercorrências';
+    const syncMsg = isSUS
+      ? 'Laudo de acesso central enviado ao prontuário eletrônico nacional (e-SUS/PEC) via RNDS.'
+      : 'Registro salvo localmente no dispositivo (Acesso Livre).';
+
+    return `Em ${dateStr}: Paciente posicionado em decúbito dorsal com a cabeça lateralizada para o lado oposto. ` +
+      `Realizada antissepsia da região cervical com solução alcoólica 70%. ` +
+      `Puncionada ${viaText} na ${attempt} com cateter venoso periférico ${jelco}. ` +
+      `Obtido refluxo venoso imediato; instalado equipo e infundindo solução prescrita ${semInter ? 'sem intercorrências' : 'com intercorrência: ' + intercurrence}. ` +
+      `Realizado flushing com SF 0,9%, mantendo via pérvia. ` +
+      `Fixação do cateter íntegra com curativo estéril transparente. ` +
+      `Paciente manteve-se estável, colaborativo e sem queixas álgicas durante o procedimento. ` +
+      `${syncMsg} ` +
+      `Resp.: ${operator} — ${reg}.`;
+  }
+
+  // Anotação para punção BLOQUEADA por restrição de segurança
+  static generateBlocked(params) {
+    const { dateStr, operator, reg, member, reason } = params;
+    return `Em ${dateStr}, o sistema VULT-SCAN identificou RESTRIÇÃO ABSOLUTA de punção em ${member}. ` +
+      `Motivo: ${reason}. Punção suspensa por protocolo de segurança assistencial. ` +
+      `Paciente orientado e registro de bloqueio enviado ao prontuário e-SUS. ` +
+      `Resp.: ${operator} — ${reg}.`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VultCryptoEngine.js — Criptografia AES-GCM-256 (LGPD)
+// ═══════════════════════════════════════════════════════════════
+class VultCryptoEngine {
+  static async deriveKey(pin, salt) {
+    const encoder = new TextEncoder();
+    const baseKey = await crypto.subtle.importKey('raw', encoder.encode(pin),
+      { name: 'PBKDF2' }, false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+      baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  }
+
+  static async encrypt(rawData, pin) {
+    const encoder = new TextEncoder();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const key = await this.deriveKey(pin, salt);
+    const buf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoder.encode(JSON.stringify(rawData)));
+    return {
+      iv: btoa(String.fromCharCode(...iv)),
+      salt: btoa(String.fromCharCode(...salt)),
+      payload: btoa(String.fromCharCode(...new Uint8Array(buf)))
+    };
+  }
+
+  static async decrypt(pkg, pin) {
+    const iv = new Uint8Array(atob(pkg.iv).split('').map(c => c.charCodeAt(0)));
+    const salt = new Uint8Array(atob(pkg.salt).split('').map(c => c.charCodeAt(0)));
+    const payload = new Uint8Array(atob(pkg.payload).split('').map(c => c.charCodeAt(0)));
+    const key = await this.deriveKey(pin, salt);
+    try {
+      const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, payload);
+      return JSON.parse(new TextDecoder().decode(dec));
+    } catch {
+      throw new Error('PIN incorreto ou dado corrompido.');
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VultDeviceSimulator.js — Simula o bracelete Vult-Vein real
+// Emite CustomEvent('vult:sensor-data') a cada 200ms com ruído gaussiano
+// ═══════════════════════════════════════════════════════════════
+class VultDeviceSimulator {
+  constructor() {
+    this.interval = null;
+    this.frameIndex = 0;
+    this.member = 'MSD';
+    this.scenarioKey = 'HEALTHY_FAV';
+    this.SCENARIOS = {
+      'HEALTHY_FAV':   { diameter: 6.2, depth: 4.8, vessel_type: 'vein',  recent_puncture: false, temp: 36.9, gradient_ok: true,  battery: 87 },
+      'STENOSIS':      { diameter: 2.4, depth: 5.1, vessel_type: 'vein',  recent_puncture: false, temp: 36.7, gradient_ok: true,  battery: 82 },
+      'ANEURYSM':      { diameter: 14.2,depth: 4.2, vessel_type: 'vein',  recent_puncture: false, temp: 37.1, gradient_ok: true,  battery: 79 },
+      'PHLEBITIS':     { diameter: 4.8, depth: 3.9, vessel_type: 'vein',  recent_puncture: false, temp: 38.6, gradient_ok: true,  battery: 75 },
+      'HYPOVOLEMIA':   { diameter: 3.1, depth: 6.8, vessel_type: 'vein',  recent_puncture: false, temp: 35.8, gradient_ok: true,  battery: 88 },
+      'ARTERY_RISK':   { diameter: 5.8, depth: 5.5, vessel_type: 'artery',recent_puncture: false, temp: 37.0, gradient_ok: true,  battery: 91 },
+      'ROTATION_SITE': { diameter: 5.4, depth: 4.6, vessel_type: 'vein',  recent_puncture: true,  temp: 36.8, gradient_ok: true,  battery: 84 },
+    };
+  }
+
+  gaussian(mean, std) {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return mean + std * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  setScenario(key) {
+    if (this.SCENARIOS[key]) this.scenarioKey = key;
+  }
+
+  setMember(m) { this.member = m; }
+
+  buildPayload() {
+    const s = this.SCENARIOS[this.scenarioKey];
+    const noisy = (v, std) => Math.max(0.5, this.gaussian(v, std));
+    return {
+      timestamp: new Date().toISOString(),
+      device_id: 'VULT-VV-A3F2K',
+      firmware_version: '3.1.2',
+      scenario_key: this.scenarioKey,
+      imu: {
+        member: this.member,
+        stability_score: this.gaussian(0.94, 0.02)
+      },
+      nir_camera: {
+        vessel_detected: true,
+        frame_confidence: this.gaussian(0.96, 0.02),
+        frame_index: ++this.frameIndex,
+        vessel_nodes: [{
+          id: 'n-v1-mid',
+          label: this.member === 'MSE' ? 'V. Basílica Média' : 'V. Cefálica Média',
+          x: this.gaussian(62, 3),
+          y: this.gaussian(131, 5),
+          diameter_mm: noisy(s.diameter, 0.15),
+          depth_mm: noisy(s.depth, 0.12),
+          vessel_type: s.vessel_type,
+          recent_puncture: s.recent_puncture,
+          signal_quality: this.gaussian(0.96, 0.02)
+        }]
+      },
+      thermal_ntc: {
+        temperature_celsius: noisy(s.temp, 0.08),
+        gradient_ok: s.gradient_ok
+      },
+      battery: { percent: s.battery, charging: false }
+    };
+  }
+
+  start() {
+    if (this.interval) return;
+    this.interval = setInterval(() => {
+      const payload = this.buildPayload();
+      document.dispatchEvent(new CustomEvent('vult:sensor-data', { detail: payload }));
+    }, 200);
+  }
+
+  stop() {
+    if (this.interval) { clearInterval(this.interval); this.interval = null; }
+  }
+
+  isRunning() { return this.interval !== null; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VultUIAdapter.js — Ponte entre motores de IA e elementos visuais
+// ═══════════════════════════════════════════════════════════════
+class VultUIAdapter {
+  static updateScannerUI(scoreResult, consolidatedAlerts, payload) {
+    const node = payload.nir_camera.vessel_nodes[0];
+    const conf = (payload.nir_camera.frame_confidence * 100).toFixed(0);
+    const temp = payload.thermal_ntc.temperature_celsius.toFixed(1);
+    const batt = payload.battery.percent;
+
+    // Update BT bar
+    const btInfo = document.getElementById('bt-info');
+    if (btInfo) btInfo.textContent = `🔋 ${batt}% · ${temp}°C`;
+
+    // Update IA confidence
+    const iaCv = document.getElementById('ia-cv');
+    const iaLbl = document.getElementById('ia-lbl');
+    if (iaCv) iaCv.textContent = `${conf}%`;
+    if (iaLbl) iaLbl.textContent = `IA · ${payload.imu.member}`;
+
+    // Update scanner status card
+    const statusCard = document.getElementById('scanner-status-card');
+    const scanMsg = document.getElementById('scanner-msg');
+    const scanMetrics = document.getElementById('scanner-metrics');
+
+    if (statusCard && scanMsg && scanMetrics) {
+      const colorMap = { 'ZONA_IDEAL':'#16a34a','ALERTA':'#d97706','CRITICO':'#dc2626','ARTERY_RISK':'#1d4ed8' };
+      const color = colorMap[scoreResult.status] || '#94a3b8';
+      statusCard.style.borderLeftColor = color;
+      scanMsg.style.color = color;
+      scanMsg.textContent = scoreResult.message;
+      scanMetrics.textContent = `Ø ${node.diameter_mm.toFixed(1)}mm · Prof. ${node.depth_mm.toFixed(1)}mm · Conf. ${conf}% · Score ${(scoreResult.score*100).toFixed(0)}%`;
+    }
+
+    // Update scan label
+    const scanLbl = document.getElementById('scan-lbl');
+    if (scanLbl) {
+      const lblMap = { 'ZONA_IDEAL':'✅ Zona Segura','ALERTA':'⚠️ Alerta Vascular','CRITICO':'🚫 Contraindicado','ARTERY_RISK':'⚠️ Artéria Detectada' };
+      scanLbl.textContent = lblMap[scoreResult.status] || 'IA · Processando...';
+    }
+
+    // Update register button
+    const btnReg = document.getElementById('btn-reg');
+    if (btnReg) {
+      btnReg.disabled = consolidatedAlerts.blockPuncture;
+      btnReg.style.background = consolidatedAlerts.blockPuncture ? 'var(--d)' : 'var(--p)';
+      btnReg.style.cursor = consolidatedAlerts.blockPuncture ? 'not-allowed' : 'pointer';
+    }
+
+    // Show/hide alerts
+    const alArt = document.getElementById('al-art');
+    const alFl = document.getElementById('al-fl');
+    const alEs = document.getElementById('al-es');
+    if (alArt) alArt.style.display = scoreResult.status === 'ARTERY_RISK' ? 'block' : 'none';
+
+    if (alFl && alEs) {
+      alFl.style.display = 'none'; alEs.style.display = 'none';
+      if (consolidatedAlerts.topAlert) {
+        const ta = consolidatedAlerts.topAlert;
+        if (ta.level === 'CRITICAL' && scoreResult.status !== 'ARTERY_RISK') {
+          alFl.style.display = 'block';
+          alFl.textContent = `${ta.icon} ${ta.title} — ${ta.desc}`;
+        } else if (ta.level === 'WARNING') {
+          alEs.style.display = 'block';
+          alEs.textContent = `${ta.icon} ${ta.title} — ${ta.desc}`;
+        }
+      }
+    }
+
+    // Update vitals from payload
+    const hrEl = document.getElementById('hr-val');
+    const spEl = document.getElementById('spo2-val');
+    const tmpEl = document.getElementById('temp-val');
+    if (hrEl) hrEl.textContent = Math.round(68 + Math.random() * 8);
+    if (spEl) spEl.textContent = (96 + Math.random() * 3).toFixed(0);
+    if (tmpEl) tmpEl.textContent = temp;
+
+    // Debug payload
+    const debugPanel = document.getElementById('debug-payload-panel');
+    if (debugPanel && debugPanel.style.display !== 'none') {
+      debugPanel.innerHTML = `<pre style="color:#34d399;font-size:9px;font-family:monospace;white-space:pre-wrap;">${JSON.stringify(payload, null, 2)}</pre>`;
+    }
+  }
+
+  static updateReticle(node, scoreResult, svgRect, svgViewBox) {
+    const reticle = document.getElementById('scanner-reticle');
+    if (!reticle) return;
+    const scaleX = svgRect.width / svgViewBox.width;
+    const scaleY = svgRect.height / svgViewBox.height;
+    const px = svgRect.left + node.x * scaleX;
+    const py = svgRect.top + node.y * scaleY;
+    const colorMap = { 'ZONA_IDEAL':'#16a34a','ALERTA':'#d97706','CRITICO':'#dc2626','ARTERY_RISK':'#1d4ed8' };
+    const color = colorMap[scoreResult.status] || '#94a3b8';
+    reticle.style.display = 'block';
+    reticle.style.left = px + 'px';
+    reticle.style.top = py + 'px';
+    reticle.style.borderColor = color;
+    reticle.style.color = color;
+    reticle.style.boxShadow = `0 0 12px ${color}88`;
+    const isPulse = scoreResult.status === 'ZONA_IDEAL';
+    reticle.style.animation = isPulse ? 'reticlePulse 1s infinite ease-in-out' : 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VultUIStateManager.js — Gerencia estados da UI com debounce
+// ═══════════════════════════════════════════════════════════════
+class VultUIStateManager {
+  constructor() {
+    this.currentState = 'IDLE';
+    this.debounceTimer = null;
+    this.DEBOUNCE_MS = 350; // evita oscilação por tremores
+  }
+
+  transition(newState, callback) {
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => {
+      if (newState !== this.currentState) {
+        this.currentState = newState;
+        callback(newState);
+      }
+    }, this.DEBOUNCE_MS);
+  }
+
+  transitionToHealthy(callback) { this.transition('HEALTHY', callback); }
+  transitionToAlert(callback)   { this.transition('ALERT', callback); }
+  transitionToCritical(callback){ this.transition('CRITICAL', callback); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// app.js — Controlador principal do VultScan v7.0
+// ═══════════════════════════════════════════════════════════════
+
+// Injetar CSS para animação da mira
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes reticlePulse {
+    0%,100% { transform: translate(-50%,-50%) scale(1); opacity:1; }
+    50%      { transform: translate(-50%,-50%) scale(1.18); opacity:.7; }
+  }
+  #scanner-reticle { position: fixed !important; }
+`;
+document.head.appendChild(style);
+
+// Instâncias globais
+const deviceSimulator = new VultDeviceSimulator();
+const uiStateManager  = new VultUIStateManager();
+let isSUS = true;
+let curPatName = '', curPatRenal = false, curNote = '';
+let vitalsInterval = null;
+let latestScoreResult = { score: 0, status: 'IDLE', message: '—', blockPuncture: false, details: { issues: [] } };
+let latestPayload = null;
+
+// ── SENSOR DATA PIPELINE ──────────────────────────────────────
+document.addEventListener('vult:sensor-data', (event) => {
+  const payload = event.detail;
+  latestPayload = payload;
+  const node = payload.nir_camera.vessel_nodes[0];
+
+  // ETAPA 1: Seleciona melhor nó (único no simulador)
+  // ETAPA 2: Score Engine
+  const scoreResult = VultScoreEngine.evaluateNode(node);
+  latestScoreResult = scoreResult;
+
+  // ETAPA 3: Alert Consolidator
+  const consolidatedAlerts = VultAlertConsolidator.consolidate(
+    scoreResult, payload.thermal_ntc, payload.scenario_key);
+
+  // ETAPA 4: UI Adapter
+  VultUIAdapter.updateScannerUI(scoreResult, consolidatedAlerts, payload);
+
+  // Update reticle position from node data
+  const svg = document.getElementById('arm-svg');
+  const reticle = document.getElementById('scanner-reticle');
+  if (svg && reticle) {
+    const svgRect = svg.getBoundingClientRect();
+    const vb = { width: 220, height: 340 };
+    VultUIAdapter.updateReticle(node, scoreResult, svgRect, vb);
+  }
+});
+
+// ── SIMULATOR CONTROLS ────────────────────────────────────────
+function toggleSimulator() {
+  const btn = document.getElementById('btn-toggle-sim');
+  const reticle = document.getElementById('scanner-reticle');
+  if (deviceSimulator.isRunning()) {
+    deviceSimulator.stop();
+    if (btn) { btn.textContent = '▶ Ligar Simulador'; btn.style.background = 'var(--s)'; }
+    if (reticle) reticle.style.display = 'none';
+    const scanLbl = document.getElementById('scan-lbl');
+    if (scanLbl) scanLbl.textContent = 'IA · Aguardando...';
+    const scanMsg = document.getElementById('scanner-msg');
+    if (scanMsg) { scanMsg.textContent = 'Aponte a mira para a fístula do paciente...'; scanMsg.style.color = 'var(--t2)'; }
+    const scanMetrics = document.getElementById('scanner-metrics');
+    if (scanMetrics) scanMetrics.textContent = 'Aguardando sinal estável do bracelete Vult-Vein...';
+    const statusCard = document.getElementById('scanner-status-card');
+    if (statusCard) statusCard.style.borderLeftColor = 'var(--b2)';
+    ['al-art','al-fl','al-es'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display='none'; });
+    const btnReg = document.getElementById('btn-reg');
+    if (btnReg) { btnReg.disabled = false; btnReg.style.background = 'var(--p)'; btnReg.style.cursor = 'pointer'; }
+  } else {
+    deviceSimulator.start();
+    if (btn) { btn.textContent = '⏹ Parar Simulador'; btn.style.background = 'var(--d)'; }
+  }
+}
+
+function setSimulatorScenario(key) {
+  deviceSimulator.setScenario(key);
+  document.querySelectorAll('.sim-scenario-btn').forEach(b => {
+    b.classList.remove('av','aa','af','ae');
+    const colorMap = {
+      'HEALTHY_FAV':'av','STENOSIS':'ae','PHLEBITIS':'af',
+      'HYPOVOLEMIA':'ae','ARTERY_RISK':'aa','ROTATION_SITE':'ae','JUGULAR':'aa'
+    };
+    if (b.dataset.scenario === key) b.classList.add(colorMap[key] || 'av');
+  });
+
+  // ── DOM helpers compatíveis com SVG ──
+  // SVG elements: use visibility + opacity (display:none não funciona em todos os browsers p/ SVG inline)
+  const hide = (ids) => ids.forEach(id => {
+    const e = document.getElementById(id);
+    if (!e) return;
+    e.style.opacity = '0';
+    e.setAttribute('visibility', 'hidden');
+    if (e.style.strokeDasharray !== undefined) e.style.strokeDasharray = '';
+  });
+  const show = (ids, opacity='1') => ids.forEach(id => {
+    const e = document.getElementById(id);
+    if (!e) return;
+    e.style.opacity = opacity;
+    e.style.display = '';          // limpa display:none inline se houver
+    e.setAttribute('visibility', 'visible');
+    e.removeAttribute('display');  // limpa atributo display do SVG se houver
+  });
+  const setStroke = (id, color, width) => {
+    const e = document.getElementById(id);
+    if (!e) return;
+    if (color) e.setAttribute('stroke', color);
+    if (width) e.setAttribute('stroke-width', String(width));
+  };
+
+  // ── Declare DOM refs ──
+  const arm    = document.getElementById('forearm-shape');
+  const irScan = document.getElementById('ir-scan');
+
+  // ── Reset tudo ──
+  hide(['v1','v2','v3','v4','v5','v6','v7','a1','a2','fav-loop','fav-label']);
+  hide(['jug-ext','jug-ext-lbl','jug-int','jug-int-d','jug-int-d-lbl','jug-int-e',
+        'subcl-d','subcl-d-lbl','subcl-e','subcl-e-lbl',
+        'carotid','carotid-lbl','jug-legend','jug-label',
+        'neck-shape','neck-shade','clavicle','shoulder-left','shoulder-right']);
+  hide(['edema-outer','edema-mid','edema-inner','phlebitis-marks']);
+  hide(['p1','p2','p3','p4','p5','stenosis-segment']);
+  hide(['hypo-v1','hypo-v2','art-danger-ring']);
+  // Reset braço e IR
+  if (arm)    { arm.style.opacity = '0.85'; arm.setAttribute('visibility','visible'); }
+  if (irScan) { irScan.style.display='none'; irScan.style.animation='none';
+                irScan.setAttribute('x','35'); irScan.setAttribute('width','135'); }
+  // Reset cores das veias
+  ['v1','v2','v3','v4','v5','v6','v7'].forEach(id => setStroke(id,'#f472b6','5'));
+
+  // ── Apply scenario-specific anatomy ──
+  if (key === 'HEALTHY_FAV') {
+    // Show FAV loop + main veins feeding it
+    show(['v1','v2','v3','v4','v5','v6','v7']);
+    show(['fav-loop','fav-label']);
+    // IR scan sweep
+    if(irScan){irScan.style.display='block';irScan.style.animation='irScan 2.2s linear infinite';}
+
+  } else if (key === 'ARTERY_RISK') {
+    // Show arteries + fainter veins + danger ring
+    show(['v1','v2','v3'],'0.35');
+    show(['a1','a2']);
+    show(['art-danger-ring'],'1');
+    setStroke('a1','#ef4444',5); setStroke('a2','#f87171',3.5);
+
+  } else if (key === 'PHLEBITIS') {
+    // Show vein (faint/red) + edema layers
+    show(['v1','v2','v3'],'0.4');
+    setStroke('v1','#ef4444',5); setStroke('v2','#ef4444',4); setStroke('v3','#ef4444',3.5);
+    show(['edema-outer','edema-mid','edema-inner','phlebitis-marks']);
+
+  } else if (key === 'STENOSIS') {
+    // Show veins with calcification plaques
+    show(['v1','v2','v3'],'0.6');
+    setStroke('v1','#94a3b8',5); setStroke('v2','#94a3b8',4); setStroke('v3','#94a3b8',3.5);
+    show(['p1','p2','p3','p4','p5','stenosis-segment']);
+
+  } else if (key === 'HYPOVOLEMIA') {
+    // Collapsed veins — dashed thin
+    show(['hypo-v1','hypo-v2']);
+
+  } else if (key === 'ROTATION_SITE') {
+    // Normal veins but with recent-use marker
+    show(['v1','v2','v3','v4','v5','v6','v7']);
+    // Purple tint for recent use
+    ['v1','v2','v3'].forEach(id=>setStroke(id,'#a78bfa',null));
+    if(irScan){irScan.style.display='block';irScan.style.animation='irScan 2.2s linear infinite';}
+
+  } else if (key === 'JUGULAR') {
+    // Switch anatomy to CERVICAL view — full vascular anatomy
+    if(arm) arm.style.opacity = '0.15';
+    // Show neck/shoulder structures
+    show(['neck-shape','neck-shade','clavicle','shoulder-left','shoulder-right']);
+    // Show all cervical veins with labels
+    show(['jug-int-d','jug-int-d-lbl']);            // Jugular Interna D (1ª — MD)
+    show(['jug-int-e']);                             // Jugular Interna E (dashed)
+    show(['subcl-d','subcl-d-lbl']);                 // Subclávia D (2ª — MD)
+    show(['subcl-e','subcl-e-lbl']);                 // Subclávia E (3ª — MD)
+    show(['jug-ext','jug-ext-lbl']);                 // Jugular Externa (4ª — ENF ✓)
+    show(['carotid','carotid-lbl']);                 // Carótida (PERIGO — pulsa)
+    show(['jug-legend']);                            // Legenda
+    // IR scan no pescoço
+    if(irScan){
+      irScan.setAttribute('x','40');
+      irScan.setAttribute('width','140');
+      irScan.style.display='block';
+      irScan.style.animation='irScan 2.5s linear infinite';
+    }
+  }
+
+  if (!deviceSimulator.isRunning()) toggleSimulator();
+}
+
+// ── PAGE ROUTING ──────────────────────────────────────────────
+function goTo(id) {
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function loginSUS() {
+  const n = document.getElementById('sus-name').value;
+  const c = document.getElementById('sus-coren').value;
+  if (!n || !c) { showToast('Preencha nome e registro.'); return; }
+  document.getElementById('p-name').value = n;
+  document.getElementById('p-reg').value = c;
+  isSUS = true;
+  document.getElementById('app-mode-pill').className = 'sus-pill';
+  document.getElementById('app-mode-pill').innerHTML = '<div class="sus-dot"></div>e-SUS Ativo';
+  document.getElementById('btn-reg-txt').textContent = 'Registrar Punção no e-SUS';
+  goTo('pg-app');
+}
+
+function loginFree() {
+  const n = document.getElementById('free-name').value;
+  const tp = document.getElementById('free-type').value;
+  const r = document.getElementById('free-reg').value;
+  const uf = document.getElementById('free-uf').value;
+  if (!n || !r) { showToast('Preencha nome e número de registro.'); return; }
+  document.getElementById('p-name').value = n;
+  document.getElementById('p-reg').value = `${tp}-${uf} ${r}`;
+  isSUS = false;
+  document.getElementById('app-mode-pill').className = 'sus-pill free-pill';
+  document.getElementById('app-mode-pill').innerHTML = '<div class="sus-dot free-dot"></div>Acesso Livre';
+  document.getElementById('btn-reg-txt').textContent = 'Registrar Punção (Local)';
+  goTo('pg-app');
+}
+
+// ── TAB SWITCH ────────────────────────────────────────────────
+function switchTab(t) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
+  document.getElementById('scr-' + t).classList.add('active');
+  const map = { cadastro:'cad', scanner:'scan', vitais:'vita', historico:'hist', pulseira:'pulv' };
+  document.getElementById('nt-' + (map[t] || t)).classList.add('active');
+  if (t === 'vitais') startVitalsDemo();
+}
+
+// ── VITALS DEMO ───────────────────────────────────────────────
+function startVitalsDemo() {
+  if (vitalsInterval) return;
+  const p = document.getElementById('ecg-path');
+  if (p) { p.style.transition = 'stroke-dashoffset 2s linear'; p.style.strokeDashoffset = '0'; }
+  vitalsInterval = setInterval(() => {
+    const hr = document.getElementById('hr-val');
+    const sp = document.getElementById('spo2-val');
+    const tmp = document.getElementById('temp-val');
+    if (hr) hr.textContent = Math.round(68 + Math.random() * 10);
+    if (sp) sp.textContent = (96 + Math.random() * 3).toFixed(0);
+    if (tmp) tmp.textContent = (36.4 + Math.random() * 0.9).toFixed(1);
+  }, 1500);
+}
+
+// ── CPF FORMAT ────────────────────────────────────────────────
+function fmtCPF(el) {
+  let v = el.value.replace(/\D/g, '').slice(0, 11);
+  if (v.length > 9) v = v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6,9)+'-'+v.slice(9);
+  else if (v.length > 6) v = v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6);
+  else if (v.length > 3) v = v.slice(0,3)+'.'+v.slice(3);
+  el.value = v;
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────
+function openM(id) { document.getElementById(id).classList.add('open'); }
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.mbackdrop').forEach(b =>
+  b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); }));
+
+// ── NOVA PUNÇÃO ───────────────────────────────────────────────
+function openPuncao() {
+  const isJug = deviceSimulator.scenarioKey === 'JUGULAR';
+  curPatName = ''; curPatRenal = false;
+
+  // Reset fields
+  document.getElementById('m-cpf').value = '';
+  document.getElementById('m-res').style.display = 'none';
+  document.getElementById('m-fav').style.display = 'none';
+  document.getElementById('m-loader').style.display = 'none';
+  const mOk = document.getElementById('m-ok');
+  if (mOk) { mOk.disabled = false; mOk.textContent = '💾 Validar no e-SUS'; }
+
+  // Adapt modal to scenario
+  const jugBanner = document.getElementById('m-jug-banner');
+  const title     = document.getElementById('m-title');
+  const demoTip   = document.getElementById('m-demo-tip');
+  const membLbl   = document.getElementById('m-memb-lbl');
+  const membSel   = document.getElementById('m-memb');
+  const jelcoSel  = document.getElementById('m-jelco');
+
+  if (isJug) {
+    // ── MODO JUGULAR ──
+    title.textContent  = '🩺 Acesso Jugular Externo · e-SUS';
+    if (jugBanner) jugBanner.style.display = 'block';
+    if (demoTip)   demoTip.textContent = 'DEMO · Digite qualquer CPF e clique em Buscar e-SUS';
+    if (membLbl)   membLbl.textContent = 'Lado da Jugular';
+    // Trocar opções de membro para lado do pescoço
+    if (membSel) {
+      membSel.innerHTML = `
+        <option value="JED">Jugular Externa Direita (4ª opção — ENF)</option>
+        <option value="JEE">Jugular Externa Esquerda</option>`;
+    }
+    // Pré-selecionar Jelco 16G para jugular
+    if (jelcoSel) {
+      for (let i=0; i<jelcoSel.options.length; i++) {
+        if (jelcoSel.options[i].value.includes('16G')) {
+          jelcoSel.selectedIndex = i; break;
+        }
+      }
+    }
+  } else {
+    // ── MODO PADRÃO ──
+    title.textContent = 'Nova Punção · e-SUS';
+    if (jugBanner) jugBanner.style.display = 'none';
+    if (demoTip)   demoTip.innerHTML = 'DEMO · CPF <strong>111</strong> = alergia · <strong>777</strong> = FAV renal · qualquer outro = padrão';
+    if (membLbl)   membLbl.textContent = 'Membro';
+    if (membSel) {
+      membSel.innerHTML = `
+        <option value="MSD">MSD — Direito</option>
+        <option value="MSE">MSE — Esquerdo</option>`;
+    }
+    // Reset jelco para 22G
+    if (jelcoSel) jelcoSel.selectedIndex = 0;
+  }
+
+  openM('m-puncao');
+}
+
+async function buscarESUS() {
+  const cpf = document.getElementById('m-cpf').value.replace(/\D/g,'');
+  if (!cpf) { showToast('Digite um CPF.'); return; }
+  document.getElementById('m-loader').style.display = 'flex';
+  document.getElementById('m-res').style.display = 'none';
+  document.getElementById('m-fav').style.display = 'none';
+  curPatRenal = false;
+
+  await new Promise(r => setTimeout(r, 1100));
+  document.getElementById('m-loader').style.display = 'none';
+  const res = document.getElementById('m-res');
+  const al = document.getElementById('m-res-alert');
+
+  if (cpf.includes('111')) {
+    curPatName = 'Cibele Fernanda Moura';
+    document.getElementById('m-res-name').textContent = curPatName;
+    al.innerHTML = '<span style="color:var(--w);font-weight:700;">⚠️ Alergia documentada a Tramadol e derivados opioides. Metformina de uso contínuo.</span>';
+  } else if (cpf.includes('777')) {
+    curPatName = 'Adalberto Cavalcanti Silva';
+    document.getElementById('m-res-name').textContent = curPatName;
+    al.innerHTML = '<span style="color:var(--d);font-weight:700;">🚫 Paciente renal crônico em hemodiálise. FÍSTULA ARTERIOVENOSA ATIVA em MSE.</span>';
+    curPatRenal = true; chkFAV();
+  } else {
+    curPatName = 'Carlos Eduardo Rodrigues';
+    document.getElementById('m-res-name').textContent = curPatName;
+    al.innerHTML = '<span style="color:var(--t2);">Diabético Tipo 2. Sem alergias medicamentosas. Insulina de uso contínuo.</span>';
+  }
+  res.style.display = 'block';
+}
+
+function chkFAV() {
+  if (!curPatRenal) { document.getElementById('m-fav').style.display = 'none'; return; }
+  const m = document.getElementById('m-memb').value;
+  const btn = document.getElementById('m-ok');
+  if (m === 'MSE') {
+    document.getElementById('m-fav').style.display = 'block';
+    btn.disabled = true; btn.textContent = '❌ Punção Bloqueada (FAV Ativa)';
+  } else {
+    document.getElementById('m-fav').style.display = 'none';
+    btn.disabled = false; btn.textContent = '💾 Validar no e-SUS';
+  }
+}
+
+async function registrar() {
+  if (!curPatName) { showToast('Busque o paciente pelo CPF primeiro.'); return; }
+
+  const isJug = deviceSimulator.scenarioKey === 'JUGULAR';
+  const cpf   = document.getElementById('m-cpf').value;
+  const tent  = document.getElementById('m-tent').value;
+  const membRaw = document.getElementById('m-memb').value;
+  const jelco = document.getElementById('m-jelco').value;
+  const inter = document.getElementById('m-inter').value;
+
+  // Normaliza o membro para texto legível
+  const membMap = {
+    'MSD':'MSD (membro superior direito)', 'MSE':'MSE (membro superior esquerdo)',
+    'JED':'jugular externa direita',        'JEE':'jugular externa esquerda'
+  };
+  const memb = membMap[membRaw] || membRaw;
+
+  // Profissional: jugular usa Marcos Guerra, demais usa cadastro
+  const pn = isJug
+    ? 'Enf./Dr. Marcos Guerra'
+    : (document.getElementById('p-name').value || 'Profissional');
+  const pr = isJug
+    ? 'COREN-SP 987.321-ENF'
+    : (document.getElementById('p-reg').value  || 'Registro');
+
+  const dt    = new Date();
+  const dtStr = dt.toLocaleDateString('pt-BR') + ' às '
+              + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) + 'h';
+  const cpfMask = cpf.replace(/(\d{3})\.\d{3}\.\d{3}(-\d{2})/, '$1.***.**$2');
+
+  let nota, status, bc;
+
+  if (curPatRenal && !isJug) {
+    // FAV bloqueado (só em membros, não em jugular)
+    nota = VultNarrativeEngine.generateBlocked({
+      dateStr: dtStr, operator: pn, reg: pr, member: memb,
+      reason: 'Fístula Arteriovenosa ativa identificada via ConecteSUS' });
+    status = 'FAV Bloqueado'; bc = 'bn';
+
+  } else if (isJug) {
+    // Anotação jugular COFEN — Marcos Guerra
+    nota = VultNarrativeEngine.generateJugular({
+      dateStr: dtStr, operator: pn, reg: pr,
+      attempt: tent, jelco, intercurrence: inter,
+      member: membRaw === 'JEE' ? 'MSE' : 'MSD',   // mantém compatibilidade interna
+      memberLabel: memb, isSUS });
+    status = 'Jugular Externa'; bc = 'bi';
+
+  } else {
+    // Punção venosa periférica padrão
+    nota = VultNarrativeEngine.generate({
+      patientName: curPatName, cpfMask, dateStr: dtStr,
+      operator: pn, reg: pr, member: memb, attempt: tent, jelco,
+      intercurrence: inter, scoreResult: latestScoreResult, isSUS });
+    const sc = latestScoreResult.status;
+    if (sc === 'CRITICO') { status = 'Contraindicado'; bc = 'bn'; }
+    else if (sc === 'ALERTA' || inter.includes('colapso')) { status = 'Alerta Vascular'; bc = 'bc'; }
+    else { status = 'Veia Íntegra'; bc = 'bi'; }
+  }
+
+  // Criptografia LGPD
+  const rawData = { nome: curPatName, cpf, diagnostico: status, anotacao: nota, dt: dtStr };
+  try {
+    const encrypted = await VultCryptoEngine.encrypt(rawData, '123456');
+    localStorage.setItem(`vult_pat_${cpf.replace(/\D/g,'')}`, JSON.stringify(encrypted));
+  } catch(e) { console.warn('Crypto:', e); }
+
+  // Adicionar ao histórico
+  const list = document.getElementById('plist');
+  const card = document.createElement('div');
+  card.className = 'pcard';
+  const notaCopy = nota, pnCopy = pn, prCopy = pr;
+  card.innerHTML = `<div>
+    <div class="pname">${curPatName}</div>
+    <div class="psub">${cpfMask} · ${dtStr}${isJug?' · 🩺 Jugular':''}</div>
+    <div class="psync">${isSUS?'✓ Sincronizado e-SUS (PEC)':'📱 Registro local'}</div>
+  </div><span class="badge ${bc}">${isJug?'Jugular':status.split(' ')[0]}</span>`;
+  card.onclick = () => openAudit(curPatName, cpfMask, dtStr, pnCopy, prCopy, bc, status, notaCopy);
+  list.insertBefore(card, list.firstChild);
+
+  // Atualiza estatísticas
+  const tot = document.getElementById('st-total');
+  const ok  = document.getElementById('st-ok');
+  const itl = document.getElementById('st-inter');
+  if (tot) tot.textContent = parseInt(tot.textContent)+1;
+  if ((status === 'Veia Íntegra' || status === 'Jugular Externa') && ok)
+    ok.textContent = parseInt(ok.textContent)+1;
+  if (inter !== 'sem intercorrências' && itl)
+    itl.textContent = parseInt(itl.textContent)+1;
+
+  closeM('m-puncao');
+  showToast(isJug
+    ? '🩺 Acesso jugular registrado — nota COFEN de Marcos Guerra!'
+    : isSUS ? '✅ Sincronizado com e-SUS! Nota COFEN gerada.' : '📱 Registro salvo!');
+  switchTab('historico');
+}
+
+// ── AUDIT MODAL ───────────────────────────────────────────────
+let currentNote = '';
+function openAudit(name, cpf, data, op, reg, bc, status, nota) {
+  document.getElementById('a-name').textContent = name;
+  document.getElementById('a-cpf').textContent = cpf;
+  document.getElementById('a-data').textContent = data;
+  document.getElementById('a-op').textContent = op + ' · ' + reg;
+  document.getElementById('a-proc').textContent = status;
+  const b = document.getElementById('a-badge'); b.textContent = status; b.className = 'badge ' + bc;
+  document.getElementById('a-note').textContent = nota;
+  currentNote = nota;
+  openM('m-audit');
+}
+
+function copyNote() {
+  navigator.clipboard.writeText(currentNote)
+    .then(() => showToast('📋 Anotação copiada!'))
+    .catch(() => showToast('Copie manualmente.'));
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(msg) {
+  const el = document.getElementById('toast-el');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+const toast = showToast;
+
+// ── LEGACY SIM BUTTONS (compatibility) ───────────────────────
+function simV() { setSimulatorScenario('HEALTHY_FAV'); }
+function simA() { setSimulatorScenario('ARTERY_RISK'); }
+function simF() { setSimulatorScenario('PHLEBITIS'); }
+function simE() { setSimulatorScenario('STENOSIS'); }
+
+console.log('✅ VultScan v7.0 — todos os motores carregados e prontos.');
+</script>
+  </div>
+</body>
+
+</html>
