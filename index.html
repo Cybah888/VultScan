@@ -2390,10 +2390,10 @@
                     style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;">
                     Frequência Cardíaca</div>
                   <div style="display:flex;align-items:baseline;gap:4px;margin-top:4px;">
-                    <span style="font-size:36px;font-weight:700;color:#e11d48;line-height:1;" id="hr-val">72</span>
+                    <span style="font-size:36px;font-weight:700;color:#e11d48;line-height:1;" id="hr-val">--</span>
                     <span style="font-size:13px;color:var(--t2);">bpm</span>
                   </div>
-                  <div style="font-size:11px;color:var(--s);font-weight:600;margin-top:2px;">● Normal (60–100 bpm)</div>
+                  <div style="font-size:11px;color:var(--t3);font-weight:600;margin-top:2px;" id="hr-status">Ligue a câmera para medir</div>
                 </div>
                 <div
                   style="background:rgba(225,29,72,.08);border:.5px solid rgba(225,29,72,.3);border-radius:var(--rsm);padding:6px 10px;text-align:center;">
@@ -2408,6 +2408,13 @@
                   fill="none" stroke="#e11d48" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                   style="stroke-dasharray:800;stroke-dashoffset:800;" />
               </svg>
+
+              <!-- Registros de FC medidos -->
+              <div id="hr-records" style="display:none;margin-top:10px;padding-top:10px;border-top:.5px solid var(--b1);">
+                <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
+                  📋 Registros de Medição</div>
+                <div id="hr-records-list" style="display:flex;flex-direction:column;gap:5px;"></div>
+              </div>
             </div>
 
             <!-- SpO2 card -->
@@ -3490,19 +3497,23 @@ function switchTab(t) {
   document.getElementById('scr-' + t).classList.add('active');
   const map = { cadastro:'cad', scanner:'scan', vitais:'vita', historico:'hist', pulseira:'pulv' };
   document.getElementById('nt-' + (map[t] || t)).classList.add('active');
-  if (t === 'vitais') startVitalsDemo();
+  // Não anima automaticamente — a FC agora é medida de verdade pela câmera
 }
 
-// ── VITALS DEMO ───────────────────────────────────────────────
+// ── VITALS DEMO (apenas SpO2 e Temp do bracelete simulado — FC é real) ──
 function startVitalsDemo() {
-  if (vitalsInterval) return;
-  const p = document.getElementById('ecg-path');
-  if (p) { p.style.transition = 'stroke-dashoffset 2s linear'; p.style.strokeDashoffset = '0'; }
+  // A FC NÃO é randomizada aqui — só é medida pela câmera real.
+  // Este botão apenas simula os sensores do bracelete (SpO2 e Temp).
+  if (vitalsInterval) { clearInterval(vitalsInterval); vitalsInterval = null;
+    const btn = document.querySelector('#scr-vitais .btn-save');
+    if (btn) btn.textContent = '▶ Iniciar Simulação ao Vivo';
+    return;
+  }
+  const btn = document.querySelector('#scr-vitais .btn-save');
+  if (btn) btn.textContent = '⏹ Parar Simulação';
   vitalsInterval = setInterval(() => {
-    const hr = document.getElementById('hr-val');
     const sp = document.getElementById('spo2-val');
     const tmp = document.getElementById('temp-val');
-    if (hr) hr.textContent = Math.round(68 + Math.random() * 10);
     if (sp) sp.textContent = (96 + Math.random() * 3).toFixed(0);
     if (tmp) tmp.textContent = (36.4 + Math.random() * 0.9).toFixed(1);
   }, 1500);
@@ -4023,6 +4034,9 @@ let vitaisPPGTime = [];
 let vitaisHrHistory = [];
 let vitaisLastUpdate = 0;
 let vitaisMeasureStart = 0;
+let vitaisStableCount = 0;
+let vitaisLocked = false;
+let vitaisRecords = [];
 
 async function toggleVitalsCamera() {
   const wrap = document.getElementById('vitais-cam-wrap');
@@ -4048,6 +4062,9 @@ async function toggleVitalsCamera() {
       await track.applyConstraints({ advanced: [{ torch: true }] });
     }
     vitaisMeasureStart = performance.now();
+    vitaisStableCount = 0;
+    vitaisLocked = false;
+    vitaisHrHistory = [];
     video.onloadedmetadata = () => { video.play(); startVitaisPPG(); };
     showToast('❤️ Encoste a ponta do dedo cobrindo a câmera e o flash. Fique imóvel.');
   } catch (err) {
@@ -4134,20 +4151,94 @@ function computeVitaisHR() {
 
   if (bpm >= 45 && bpm <= 190) {
     vitaisHrHistory.push(bpm);
-    if (vitaisHrHistory.length > 5) vitaisHrHistory.shift();
-    const avg = Math.round(vitaisHrHistory.reduce((a,b)=>a+b,0)/vitaisHrHistory.length);
+    if (vitaisHrHistory.length > 8) vitaisHrHistory.shift();
+
+    // Média com descarte de outliers (mediana ponderada)
+    const sorted = [...vitaisHrHistory].sort((a,b)=>a-b);
+    const median = sorted[Math.floor(sorted.length/2)];
+    // Descarta valores muito longe da mediana (> 15 bpm)
+    const filtered = vitaisHrHistory.filter(v => Math.abs(v - median) <= 15);
+    const avg = Math.round(filtered.reduce((a,b)=>a+b,0)/filtered.length);
 
     // Atualiza número FC
     const hrEl = document.getElementById('hr-val');
     if (hrEl) { hrEl.textContent = avg; pulseElement(hrEl); }
 
+    // Atualiza classificação clínica
+    const hrStatus = document.getElementById('hr-status');
+    if (hrStatus) {
+      if (avg < 60) { hrStatus.textContent = '● Bradicardia (< 60 bpm)'; hrStatus.style.color = 'var(--w)'; }
+      else if (avg > 100) { hrStatus.textContent = '● Taquicardia (> 100 bpm)'; hrStatus.style.color = 'var(--w)'; }
+      else { hrStatus.textContent = '● Normal (60–100 bpm)'; hrStatus.style.color = 'var(--s)'; }
+    }
+
     // Anima o ECG conforme o BPM real
     animateECG(avg);
 
-    // Classificação
-    const hrStatus = document.querySelector('#scr-vitais [id="hr-val"]');
-    if (statusEl) { statusEl.textContent = `✅ ${avg} bpm — medição real`; statusEl.style.color = '#4ade80'; }
+    // ── DETECÇÃO DE ESTABILIDADE ──
+    // Se as últimas 5 leituras estão próximas (variação ≤ 5 bpm), travou!
+    if (vitaisHrHistory.length >= 5) {
+      const recent = vitaisHrHistory.slice(-5);
+      const rMax = Math.max(...recent), rMin = Math.min(...recent);
+      if ((rMax - rMin) <= 6) {
+        vitaisStableCount++;
+        if (statusEl) {
+          statusEl.textContent = `🔒 Estabilizando... ${Math.min(100,vitaisStableCount*33)}%`;
+          statusEl.style.color = '#fbbf24';
+        }
+        // 3 confirmações seguidas de estabilidade = registra
+        if (vitaisStableCount >= 3 && !vitaisLocked) {
+          vitaisLocked = true;
+          lockAndRegisterHR(avg);
+        }
+      } else {
+        vitaisStableCount = 0;
+        if (statusEl) { statusEl.textContent = `Medindo... segure firme (${avg} bpm)`; statusEl.style.color = '#fff'; }
+      }
+    }
   }
+}
+
+// Trava o valor final e registra a medição
+function lockAndRegisterHR(bpm) {
+  const statusEl = document.getElementById('vitais-cam-status');
+  if (statusEl) { statusEl.textContent = `✅ Medição concluída: ${bpm} bpm`; statusEl.style.color = '#4ade80'; }
+
+  // Registra a medição com horário
+  const now = new Date();
+  const hora = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  vitaisRecords.unshift({ bpm, hora });
+  if (vitaisRecords.length > 3) vitaisRecords.pop();   // mantém só 3
+
+  renderHRRecords();
+
+  // Vibração de confirmação (se suportado)
+  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+  showToast(`✅ FC registrada: ${bpm} bpm às ${hora}`);
+
+  // Para a câmera após 1.5s (deixa o usuário ver o resultado)
+  setTimeout(() => { if (vitaisCameraStream) stopVitalsCamera(); }, 1500);
+}
+
+// Renderiza os registros de FC
+function renderHRRecords() {
+  const box = document.getElementById('hr-records');
+  const list = document.getElementById('hr-records-list');
+  if (!box || !list) return;
+  if (vitaisRecords.length === 0) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  list.innerHTML = vitaisRecords.map((r, i) => {
+    const cls = r.bpm < 60 ? 'var(--w)' : r.bpm > 100 ? 'var(--w)' : 'var(--s)';
+    const status = r.bpm < 60 ? 'Bradicardia' : r.bpm > 100 ? 'Taquicardia' : 'Normal';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--s2);border-radius:var(--rsm);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;font-weight:700;color:#e11d48;">${r.bpm}</span>
+        <span style="font-size:11px;color:var(--t2);">bpm · ${status}</span>
+      </div>
+      <span style="font-size:11px;color:var(--t3);font-weight:600;">🕐 ${r.hora}</span>
+    </div>`;
+  }).join('');
 }
 
 // Anima o ECG na velocidade do batimento real
@@ -4173,6 +4264,7 @@ function stopVitalsCamera() {
   if (vitaisCameraStream) vitaisCameraStream.getTracks().forEach(t => t.stop());
   vitaisCameraStream = null; vitaisTorchTrack = null;
   vitaisPPG = []; vitaisPPGTime = []; vitaisHrHistory = []; vitaisLastUpdate = 0; vitaisMeasureStart = 0;
+  vitaisStableCount = 0; vitaisLocked = false;
   wrap.style.height = '0';
   video.srcObject = null;
   btn.innerHTML = '❤️ Medir Frequência Cardíaca Real (câmera)';
