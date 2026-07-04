@@ -707,7 +707,7 @@
     .scanner-cam {
       position: relative;
       background: #04080f;
-      height: 460px;
+      height: 540px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2348,40 +2348,6 @@
 
           </div>
 
-          <!-- ═══ TIRA DE SINAIS VITAIS AO VIVO (preenche o espaço) ═══ -->
-          <div style="padding: 4px 16px 10px;">
-            <div style="background:linear-gradient(135deg,rgba(225,29,72,.06),rgba(37,99,235,.06));
-                 border:1px solid var(--b1); border-radius:var(--r); padding:12px 14px;">
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-                <span style="font-size:11px; font-weight:700; color:var(--t2); text-transform:uppercase; letter-spacing:.5px;">
-                  ❤️ Sinais Vitais ao Vivo</span>
-                <span id="scan-vitals-status" style="font-size:10px; color:var(--t3); font-weight:600;">
-                  Encoste o dedo na câmera</span>
-              </div>
-              <div id="scan-vitals-live" style="font-size:15px; font-weight:700; color:var(--t3); text-align:center; letter-spacing:.3px;">
-                ❤️ -- bpm &nbsp;·&nbsp; 🫁 --% &nbsp;·&nbsp; 🌡️ --°C
-              </div>
-              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px;">
-                <div style="text-align:center; padding:8px; background:rgba(225,29,72,.08); border:1px solid rgba(225,29,72,.25); border-radius:var(--rsm);">
-                  <div style="font-size:9px; color:var(--d); font-weight:800;">❤️ FC · REAL</div>
-                  <div style="font-size:10px; color:var(--t2); margin-top:2px;">Câmera + flash</div>
-                </div>
-                <div style="text-align:center; padding:8px; background:var(--s1); border-radius:var(--rsm);">
-                  <div style="font-size:9px; color:var(--t3); font-weight:700;">🔒 SpO₂</div>
-                  <div style="font-size:10px; color:var(--t2); margin-top:2px;">Sensor bracelete</div>
-                </div>
-                <div style="text-align:center; padding:8px; background:var(--s1); border-radius:var(--rsm);">
-                  <div style="font-size:9px; color:var(--t3); font-weight:700;">🔒 Temp</div>
-                  <div style="font-size:10px; color:var(--t2); margin-top:2px;">Sensor bracelete</div>
-                </div>
-              </div>
-              <div style="font-size:10px; color:var(--t3); text-align:center; margin-top:8px; line-height:1.5;">
-                💡 A <strong style="color:var(--d)">Frequência Cardíaca é medida de verdade</strong> pela câmera + flash (tecnologia PPG, validada vs ECG).
-                Encoste a ponta do dedo cobrindo a câmera e a luz. SpO₂ e Temperatura virão do sensor do bracelete Vult-Vein.
-              </div>
-            </div>
-          </div>
-
           <button class="btn-reg" id="btn-reg" onclick="openPuncao()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round">
@@ -2396,6 +2362,21 @@
           <div class="tab-header">
             <h2>Sinais Vitais</h2>
             <p>Monitoramento em tempo real via Vult-Vein</p>
+          </div>
+
+          <!-- ═══ CÂMERA REAL PARA MEDIR FC (PPG) ═══ -->
+          <div style="padding:0 16px 12px;">
+            <div id="vitais-cam-wrap" style="position:relative;background:#04080f;border-radius:var(--r);overflow:hidden;height:0;transition:height .3s;">
+              <video id="vitais-camera-feed" autoplay playsinline muted
+                style="width:100%;height:180px;object-fit:cover;display:block;"></video>
+              <div id="vitais-cam-status" style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:600;padding:8px 12px;text-align:center;">
+                Encoste o dedo na câmera + flash
+              </div>
+            </div>
+            <button id="vitais-cam-btn" onclick="toggleVitalsCamera()"
+              style="width:100%;padding:12px;border-radius:var(--r);border:none;background:linear-gradient(135deg,#e11d48,#be185d);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;">
+              ❤️ Medir Frequência Cardíaca Real (câmera)
+            </button>
           </div>
 
           <!-- Live metrics grid -->
@@ -4029,6 +4010,175 @@ function pulseElement(el) {
   el.style.transform = 'scale(1.18)';
   el.style.color = 'var(--d)';
   setTimeout(() => { el.style.transform = 'scale(1)'; }, 150);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CÂMERA DA ABA VITAIS — mede FC real e anima o ECG conforme batimento
+// ═══════════════════════════════════════════════════════════════
+let vitaisCameraStream = null;
+let vitaisTorchTrack = null;
+let vitaisEdgeRAF = null;
+let vitaisPPG = [];
+let vitaisPPGTime = [];
+let vitaisHrHistory = [];
+let vitaisLastUpdate = 0;
+let vitaisMeasureStart = 0;
+
+async function toggleVitalsCamera() {
+  const wrap = document.getElementById('vitais-cam-wrap');
+  const video = document.getElementById('vitais-camera-feed');
+  const btn = document.getElementById('vitais-cam-btn');
+
+  if (vitaisCameraStream) { stopVitalsCamera(); return; }
+
+  try {
+    vitaisCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+    video.srcObject = vitaisCameraStream;
+    wrap.style.height = '180px';
+    btn.innerHTML = '⏹ Parar Medição';
+    btn.style.background = 'linear-gradient(135deg,#64748b,#475569)';
+
+    const track = vitaisCameraStream.getVideoTracks()[0];
+    vitaisTorchTrack = track;
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    if (caps.torch) {
+      await track.applyConstraints({ advanced: [{ torch: true }] });
+    }
+    vitaisMeasureStart = performance.now();
+    video.onloadedmetadata = () => { video.play(); startVitaisPPG(); };
+    showToast('❤️ Encoste a ponta do dedo cobrindo a câmera e o flash. Fique imóvel.');
+  } catch (err) {
+    const msg = err.name === 'NotAllowedError' ? '❌ Toque em "Permitir" para a câmera medir sua FC.'
+      : '❌ Câmera indisponível: ' + err.name;
+    showToast(msg);
+  }
+}
+
+function startVitaisPPG() {
+  const video = document.getElementById('vitais-camera-feed');
+  const work = document.createElement('canvas');
+  const W = 100, H = 80;
+  work.width = W; work.height = H;
+  const wctx = work.getContext('2d', { willReadFrequently: true });
+
+  function loop() {
+    if (!vitaisCameraStream) return;
+    if (video.readyState >= 2) {
+      wctx.drawImage(video, 0, 0, W, H);
+      let frame;
+      try { frame = wctx.getImageData(0, 0, W, H); } catch(e) { vitaisEdgeRAF = requestAnimationFrame(loop); return; }
+      const src = frame.data;
+      let rSum = 0;
+      for (let i = 0; i < src.length; i += 4) rSum += src[i];
+      const rAvg = rSum / (src.length/4);
+
+      // Detecta dedo (vermelho dominante)
+      const now = performance.now();
+      vitaisPPG.push(rAvg);
+      vitaisPPGTime.push(now);
+      if (vitaisPPG.length > 160) { vitaisPPG.shift(); vitaisPPGTime.shift(); }
+      computeVitaisHR();
+    }
+    vitaisEdgeRAF = requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function computeVitaisHR() {
+  const now = performance.now();
+  const statusEl = document.getElementById('vitais-cam-status');
+  if (now - vitaisLastUpdate < 800) return;
+  if (vitaisPPG.length < 64) {
+    if (statusEl) statusEl.textContent = `Medindo... ${Math.min(99, Math.round(vitaisPPG.length/64*100))}%`;
+    return;
+  }
+  vitaisLastUpdate = now;
+
+  // Suaviza
+  const smooth = [];
+  for (let i = 1; i < vitaisPPG.length-1; i++)
+    smooth.push((vitaisPPG[i-1] + vitaisPPG[i] + vitaisPPG[i+1]) / 3);
+
+  // Detrend
+  const win = 12, det = [];
+  for (let i = 0; i < smooth.length; i++) {
+    let s = Math.max(0, i-win), e = Math.min(smooth.length, i+win), m = 0;
+    for (let j = s; j < e; j++) m += smooth[j];
+    det.push(smooth[i] - m/(e-s));
+  }
+
+  // Picos
+  const peaks = [];
+  for (let i = 2; i < det.length-2; i++) {
+    if (det[i] > 0 && det[i] >= det[i-1] && det[i] >= det[i-2] && det[i] > det[i+1] && det[i] > det[i+2]) {
+      const idx = i+1;
+      if (idx < vitaisPPGTime.length) {
+        const t = vitaisPPGTime[idx];
+        if (peaks.length === 0 || (t - peaks[peaks.length-1]) > 300) peaks.push(t);
+      }
+    }
+  }
+
+  let bpm = 0;
+  if (peaks.length >= 3) {
+    let sum = 0, cnt = 0;
+    for (let i = 1; i < peaks.length; i++) {
+      const rr = peaks[i] - peaks[i-1];
+      if (rr > 300 && rr < 1500) { sum += rr; cnt++; }
+    }
+    if (cnt > 0) bpm = Math.round(60000 / (sum/cnt));
+  }
+
+  if (bpm >= 45 && bpm <= 190) {
+    vitaisHrHistory.push(bpm);
+    if (vitaisHrHistory.length > 5) vitaisHrHistory.shift();
+    const avg = Math.round(vitaisHrHistory.reduce((a,b)=>a+b,0)/vitaisHrHistory.length);
+
+    // Atualiza número FC
+    const hrEl = document.getElementById('hr-val');
+    if (hrEl) { hrEl.textContent = avg; pulseElement(hrEl); }
+
+    // Anima o ECG conforme o BPM real
+    animateECG(avg);
+
+    // Classificação
+    const hrStatus = document.querySelector('#scr-vitais [id="hr-val"]');
+    if (statusEl) { statusEl.textContent = `✅ ${avg} bpm — medição real`; statusEl.style.color = '#4ade80'; }
+  }
+}
+
+// Anima o ECG na velocidade do batimento real
+let ecgAnimInterval = null;
+function animateECG(bpm) {
+  const path = document.getElementById('ecg-path');
+  if (!path) return;
+  const beatMs = 60000 / bpm;   // duração de um ciclo
+  path.style.transition = 'none';
+  path.style.strokeDashoffset = '800';
+  // Força reflow e anima
+  void path.getBoundingClientRect();
+  path.style.transition = `stroke-dashoffset ${beatMs*4/1000}s linear`;
+  path.style.strokeDashoffset = '0';
+}
+
+function stopVitalsCamera() {
+  const wrap = document.getElementById('vitais-cam-wrap');
+  const video = document.getElementById('vitais-camera-feed');
+  const btn = document.getElementById('vitais-cam-btn');
+  if (vitaisEdgeRAF) { cancelAnimationFrame(vitaisEdgeRAF); vitaisEdgeRAF = null; }
+  if (vitaisTorchTrack) { try { vitaisTorchTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e){} }
+  if (vitaisCameraStream) vitaisCameraStream.getTracks().forEach(t => t.stop());
+  vitaisCameraStream = null; vitaisTorchTrack = null;
+  vitaisPPG = []; vitaisPPGTime = []; vitaisHrHistory = []; vitaisLastUpdate = 0; vitaisMeasureStart = 0;
+  wrap.style.height = '0';
+  video.srcObject = null;
+  btn.innerHTML = '❤️ Medir Frequência Cardíaca Real (câmera)';
+  btn.style.background = 'linear-gradient(135deg,#e11d48,#be185d)';
+  const statusEl = document.getElementById('vitais-cam-status');
+  if (statusEl) { statusEl.textContent = 'Encoste o dedo na câmera + flash'; statusEl.style.color = '#fff'; }
 }
 
 function stopRealCamera() {
