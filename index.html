@@ -1899,7 +1899,7 @@
             Vult-Vein Ativo
             <div class="bt-dot-anim"></div>
           </div>
-          <div class="bt-right" id="bt-info">🔋 85% · 37.1°C</div>
+          <div class="bt-right" id="bt-info">🔋 85% · 36.5°C</div>
         </div>
 
         <!-- ---- ABAS ---- -->
@@ -2454,11 +2454,10 @@
                     style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;">
                     Temperatura do Membro</div>
                   <div style="display:flex;align-items:baseline;gap:4px;margin-top:4px;">
-                    <span style="font-size:36px;font-weight:700;color:#059669;line-height:1;" id="temp-val">36.8</span>
+                    <span style="font-size:36px;font-weight:700;color:#059669;line-height:1;" id="temp-val">36.5</span>
                     <span style="font-size:13px;color:var(--t2);">°C</span>
                   </div>
-                  <div style="font-size:11px;color:var(--s);font-weight:600;margin-top:2px;">● Normal · Sem sinais de
-                    isquemia</div>
+                  <div style="font-size:11px;color:var(--s);font-weight:600;margin-top:2px;" id="temp-status">● Afebril · Normal (36–37,2°C)</div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
                   <div
@@ -2513,6 +2512,15 @@
               <div class="stat-v" id="st-inter" style="color:var(--w)">2</div>
               <div class="stat-l">Intercorrências</div>
             </div>
+          </div>
+
+          <!-- ═══ MEDIÇÕES DE SINAIS VITAIS (aparece após medir FC) ═══ -->
+          <div id="ssvv-report" style="display:none;margin:0 16px 12px;background:linear-gradient(135deg,rgba(225,29,72,.05),rgba(37,99,235,.05));border:1px solid var(--b1);border-radius:var(--r);padding:14px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+              <span style="font-size:12px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;">
+                📊 Últimas Medições de Sinais Vitais</span>
+            </div>
+            <div id="ssvv-report-list" style="display:flex;flex-direction:column;gap:8px;"></div>
           </div>
           <div class="plist" id="plist">
             <div class="pcard"
@@ -3514,8 +3522,18 @@ function startVitalsDemo() {
   vitalsInterval = setInterval(() => {
     const sp = document.getElementById('spo2-val');
     const tmp = document.getElementById('temp-val');
+    const tmpStatus = document.getElementById('temp-status');
     if (sp) sp.textContent = (96 + Math.random() * 3).toFixed(0);
-    if (tmp) tmp.textContent = (36.4 + Math.random() * 0.9).toFixed(1);
+    if (tmp) {
+      // Temperatura normal fisiológica (36.2 a 37.0)
+      const t = (36.2 + Math.random() * 0.8);
+      tmp.textContent = t.toFixed(1);
+      if (tmpStatus) {
+        const tc = classifyTemp(t);
+        tmpStatus.textContent = '● ' + tc.label + ' (36–37,2°C)';
+        tmpStatus.style.color = tc.color;
+      }
+    }
   }, 1500);
 }
 
@@ -4037,6 +4055,7 @@ let vitaisMeasureStart = 0;
 let vitaisStableCount = 0;
 let vitaisLocked = false;
 let vitaisRecords = [];
+let vitaisTimeout = null;
 
 async function toggleVitalsCamera() {
   const wrap = document.getElementById('vitais-cam-wrap');
@@ -4067,6 +4086,20 @@ async function toggleVitalsCamera() {
     vitaisHrHistory = [];
     video.onloadedmetadata = () => { video.play(); startVitaisPPG(); };
     showToast('❤️ Encoste a ponta do dedo cobrindo a câmera e o flash. Fique imóvel.');
+
+    // Timeout de segurança: após 22s, trava o valor atual mesmo se não estabilizou 100%
+    vitaisTimeout = setTimeout(() => {
+      if (vitaisCameraStream && !vitaisLocked && vitaisHrHistory.length >= 3) {
+        vitaisLocked = true;
+        const sorted = [...vitaisHrHistory].sort((a,b)=>a-b);
+        const median = sorted[Math.floor(sorted.length/2)];
+        lockAndRegisterHR(median);
+      } else if (vitaisCameraStream && !vitaisLocked) {
+        // Não conseguiu ler — orienta
+        showToast('⚠️ Não foi possível ler o pulso. Cubra bem a câmera E o flash com o dedo.');
+        stopVitalsCamera();
+      }
+    }, 22000);
   } catch (err) {
     const msg = err.name === 'NotAllowedError' ? '❌ Toque em "Permitir" para a câmera medir sua FC.'
       : '❌ Câmera indisponível: ' + err.name;
@@ -4176,67 +4209,145 @@ function computeVitaisHR() {
     animateECG(avg);
 
     // ── DETECÇÃO DE ESTABILIDADE ──
-    // Se as últimas 5 leituras estão próximas (variação ≤ 5 bpm), travou!
+    // Precisa de pelo menos 5 leituras válidas
     if (vitaisHrHistory.length >= 5) {
       const recent = vitaisHrHistory.slice(-5);
       const rMax = Math.max(...recent), rMin = Math.min(...recent);
-      if ((rMax - rMin) <= 6) {
+      const spread = rMax - rMin;
+
+      if (spread <= 8) {
+        // Está estável — conta confirmações
         vitaisStableCount++;
+        const pct = Math.min(100, Math.round(vitaisStableCount / 4 * 100));
         if (statusEl) {
-          statusEl.textContent = `🔒 Estabilizando... ${Math.min(100,vitaisStableCount*33)}%`;
+          statusEl.textContent = `🔒 Estabilizando... ${pct}%`;
           statusEl.style.color = '#fbbf24';
         }
-        // 3 confirmações seguidas de estabilidade = registra
-        if (vitaisStableCount >= 3 && !vitaisLocked) {
+        // 4 confirmações estáveis = trava e registra
+        if (vitaisStableCount >= 4 && !vitaisLocked) {
           vitaisLocked = true;
           lockAndRegisterHR(avg);
         }
       } else {
+        // Ainda oscilando — reseta contador
         vitaisStableCount = 0;
-        if (statusEl) { statusEl.textContent = `Medindo... segure firme (${avg} bpm)`; statusEl.style.color = '#fff'; }
+        if (statusEl) {
+          statusEl.textContent = `Medindo ${avg} bpm · segure firme`;
+          statusEl.style.color = '#fff';
+        }
+      }
+    } else {
+      if (statusEl) {
+        statusEl.textContent = `Lendo pulso... ${avg} bpm`;
+        statusEl.style.color = '#fff';
       }
     }
   }
 }
 
-// Trava o valor final e registra a medição
+// Classificação clínica de temperatura (tabela COFEN/semiologia)
+function classifyTemp(t) {
+  if (t < 35.0) return { label: 'Hipotermia', color: 'var(--b2)' };
+  if (t <= 37.2) return { label: 'Afebril · Normal', color: 'var(--s)' };
+  if (t <= 37.7) return { label: 'Estado Febril', color: 'var(--w)' };
+  if (t <= 38.9) return { label: 'Febre', color: 'var(--w)' };
+  if (t <= 40.0) return { label: 'Pirexia', color: 'var(--d)' };
+  return { label: 'Hiperpirexia', color: 'var(--d)' };
+}
+// Classificação de FC
+function classifyHR(bpm) {
+  if (bpm < 60) return { label: 'Bradicardia', color: 'var(--w)' };
+  if (bpm > 100) return { label: 'Taquicardia', color: 'var(--w)' };
+  return { label: 'Normal', color: 'var(--s)' };
+}
+// Classificação de SpO2
+function classifySpO2(v) {
+  if (v >= 95) return { label: 'Excelente', color: 'var(--s)' };
+  if (v >= 90) return { label: 'Aceitável', color: 'var(--w)' };
+  return { label: 'Hipoxemia', color: 'var(--d)' };
+}
+
+// Trava o valor final e registra a medição consolidada
 function lockAndRegisterHR(bpm) {
   const statusEl = document.getElementById('vitais-cam-status');
   if (statusEl) { statusEl.textContent = `✅ Medição concluída: ${bpm} bpm`; statusEl.style.color = '#4ade80'; }
 
-  // Registra a medição com horário
+  // Captura os 3 sinais vitais no momento da medição
+  const spo2El = document.getElementById('spo2-val');
+  const tempEl = document.getElementById('temp-val');
+  const spo2 = spo2El ? parseInt(spo2El.textContent) || 98 : 98;
+  const temp = tempEl ? parseFloat(tempEl.textContent) || 36.5 : 36.5;
+
   const now = new Date();
-  const hora = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  vitaisRecords.unshift({ bpm, hora });
-  if (vitaisRecords.length > 3) vitaisRecords.pop();   // mantém só 3
+  const hora = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  const data = now.toLocaleDateString('pt-BR');
+
+  // Registra medição consolidada dos 3 SSVV
+  vitaisRecords.unshift({ bpm, spo2, temp, hora, data });
+  if (vitaisRecords.length > 3) vitaisRecords.pop();
 
   renderHRRecords();
+  renderSSVVReport();
 
-  // Vibração de confirmação (se suportado)
   if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  showToast(`✅ SSVV registrados: FC ${bpm} · SpO₂ ${spo2}% · Temp ${temp}°C`);
 
-  showToast(`✅ FC registrada: ${bpm} bpm às ${hora}`);
-
-  // Para a câmera após 1.5s (deixa o usuário ver o resultado)
-  setTimeout(() => { if (vitaisCameraStream) stopVitalsCamera(); }, 1500);
+  // Para a câmera após 2s
+  setTimeout(() => { if (vitaisCameraStream) stopVitalsCamera(); }, 2000);
 }
 
-// Renderiza os registros de FC
+// Renderiza registros na aba Vitais (abaixo do ECG)
 function renderHRRecords() {
   const box = document.getElementById('hr-records');
   const list = document.getElementById('hr-records-list');
   if (!box || !list) return;
   if (vitaisRecords.length === 0) { box.style.display = 'none'; return; }
   box.style.display = 'block';
-  list.innerHTML = vitaisRecords.map((r, i) => {
-    const cls = r.bpm < 60 ? 'var(--w)' : r.bpm > 100 ? 'var(--w)' : 'var(--s)';
-    const status = r.bpm < 60 ? 'Bradicardia' : r.bpm > 100 ? 'Taquicardia' : 'Normal';
+  list.innerHTML = vitaisRecords.map(r => {
+    const hr = classifyHR(r.bpm);
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--s2);border-radius:var(--rsm);">
       <div style="display:flex;align-items:center;gap:8px;">
         <span style="font-size:16px;font-weight:700;color:#e11d48;">${r.bpm}</span>
-        <span style="font-size:11px;color:var(--t2);">bpm · ${status}</span>
+        <span style="font-size:11px;color:${hr.color};font-weight:600;">bpm · ${hr.label}</span>
       </div>
       <span style="font-size:11px;color:var(--t3);font-weight:600;">🕐 ${r.hora}</span>
+    </div>`;
+  }).join('');
+}
+
+// Renderiza relatório consolidado dos 3 SSVV no Histórico
+function renderSSVVReport() {
+  const box = document.getElementById('ssvv-report');
+  const list = document.getElementById('ssvv-report-list');
+  if (!box || !list) return;
+  if (vitaisRecords.length === 0) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  list.innerHTML = vitaisRecords.map((r, i) => {
+    const hr = classifyHR(r.bpm);
+    const sp = classifySpO2(r.spo2);
+    const tp = classifyTemp(r.temp);
+    return `<div style="background:var(--s1);border:.5px solid var(--b1);border-radius:var(--rsm);padding:10px 12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:11px;font-weight:700;color:var(--t2);">Medição ${vitaisRecords.length - i}</span>
+        <span style="font-size:11px;color:var(--t3);font-weight:600;">🕐 ${r.data} ${r.hora}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#e11d48;line-height:1;">${r.bpm}</div>
+          <div style="font-size:8px;color:var(--t3);margin-top:2px;">FC · bpm</div>
+          <div style="font-size:8px;color:${hr.color};font-weight:700;">${hr.label}</div>
+        </div>
+        <div style="text-align:center;border-left:.5px solid var(--b1);border-right:.5px solid var(--b1);">
+          <div style="font-size:18px;font-weight:700;color:#2563eb;line-height:1;">${r.spo2}<span style="font-size:10px;">%</span></div>
+          <div style="font-size:8px;color:var(--t3);margin-top:2px;">SpO₂ 🔒</div>
+          <div style="font-size:8px;color:${sp.color};font-weight:700;">${sp.label}</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#059669;line-height:1;">${r.temp}<span style="font-size:10px;">°</span></div>
+          <div style="font-size:8px;color:var(--t3);margin-top:2px;">Temp 🔒</div>
+          <div style="font-size:8px;color:${tp.color};font-weight:700;">${tp.label}</div>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -4260,6 +4371,7 @@ function stopVitalsCamera() {
   const video = document.getElementById('vitais-camera-feed');
   const btn = document.getElementById('vitais-cam-btn');
   if (vitaisEdgeRAF) { cancelAnimationFrame(vitaisEdgeRAF); vitaisEdgeRAF = null; }
+  if (vitaisTimeout) { clearTimeout(vitaisTimeout); vitaisTimeout = null; }
   if (vitaisTorchTrack) { try { vitaisTorchTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e){} }
   if (vitaisCameraStream) vitaisCameraStream.getTracks().forEach(t => t.stop());
   vitaisCameraStream = null; vitaisTorchTrack = null;
