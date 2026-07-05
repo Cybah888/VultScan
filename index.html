@@ -4056,6 +4056,7 @@ let vitaisStableCount = 0;
 let vitaisLocked = false;
 let vitaisRecords = [];
 let vitaisTimeout = null;
+let vitaisNoFingerCount = 0;
 
 async function toggleVitalsCamera() {
   const wrap = document.getElementById('vitais-cam-wrap');
@@ -4080,26 +4081,29 @@ async function toggleVitalsCamera() {
     if (caps.torch) {
       await track.applyConstraints({ advanced: [{ torch: true }] });
     }
-    vitaisMeasureStart = performance.now();
+    vitaisMeasureStart = 0;
     vitaisStableCount = 0;
     vitaisLocked = false;
+    vitaisNoFingerCount = 0;
     vitaisHrHistory = [];
+    vitaisPPG = [];
+    vitaisPPGTime = [];
     video.onloadedmetadata = () => { video.play(); startVitaisPPG(); };
     showToast('❤️ Encoste a ponta do dedo cobrindo a câmera e o flash. Fique imóvel.');
 
-    // Timeout de segurança: após 22s, trava o valor atual mesmo se não estabilizou 100%
+    // Timeout de segurança: após 30s total, encerra
     vitaisTimeout = setTimeout(() => {
-      if (vitaisCameraStream && !vitaisLocked && vitaisHrHistory.length >= 3) {
-        vitaisLocked = true;
-        const sorted = [...vitaisHrHistory].sort((a,b)=>a-b);
-        const median = sorted[Math.floor(sorted.length/2)];
-        lockAndRegisterHR(median);
-      } else if (vitaisCameraStream && !vitaisLocked) {
-        // Não conseguiu ler — orienta
-        showToast('⚠️ Não foi possível ler o pulso. Cubra bem a câmera E o flash com o dedo.');
-        stopVitalsCamera();
+      if (vitaisCameraStream && !vitaisLocked) {
+        if (vitaisHrHistory.length >= 3) {
+          vitaisLocked = true;
+          const sorted = [...vitaisHrHistory].sort((a,b)=>a-b);
+          lockAndRegisterHR(sorted[Math.floor(sorted.length/2)]);
+        } else {
+          showToast('⚠️ Não foi possível ler o pulso. Cubra bem a câmera E o flash.');
+          stopVitalsCamera();
+        }
       }
-    }, 22000);
+    }, 30000);
   } catch (err) {
     const msg = err.name === 'NotAllowedError' ? '❌ Toque em "Permitir" para a câmera medir sua FC.'
       : '❌ Câmera indisponível: ' + err.name;
@@ -4121,16 +4125,46 @@ function startVitaisPPG() {
       let frame;
       try { frame = wctx.getImageData(0, 0, W, H); } catch(e) { vitaisEdgeRAF = requestAnimationFrame(loop); return; }
       const src = frame.data;
-      let rSum = 0;
-      for (let i = 0; i < src.length; i += 4) rSum += src[i];
-      const rAvg = rSum / (src.length/4);
+      let rSum = 0, gSum = 0, bSum = 0;
+      for (let i = 0; i < src.length; i += 4) { rSum += src[i]; gSum += src[i+1]; bSum += src[i+2]; }
+      const n = src.length / 4;
+      const rAvg = rSum/n, gAvg = gSum/n, bAvg = bSum/n;
 
-      // Detecta dedo (vermelho dominante)
+      // ── DETECÇÃO DE DEDO ──
+      // Dedo sobre câmera+flash = vermelho MUITO dominante e escuro nos outros canais
+      const fingerOn = (rAvg > 60 && rAvg > gAvg * 1.8 && rAvg > bAvg * 1.8);
+
+      const statusEl = document.getElementById('vitais-cam-status');
       const now = performance.now();
-      vitaisPPG.push(rAvg);
-      vitaisPPGTime.push(now);
-      if (vitaisPPG.length > 160) { vitaisPPG.shift(); vitaisPPGTime.shift(); }
-      computeVitaisHR();
+
+      if (fingerOn) {
+        // Dedo detectado — coleta amostra PPG
+        if (vitaisNoFingerCount > 0 || vitaisMeasureStart === 0) {
+          // Primeiro contato do dedo — inicia/reinicia cronômetro de medição
+          if (vitaisPPG.length === 0) vitaisMeasureStart = now;
+        }
+        vitaisNoFingerCount = 0;
+        vitaisPPG.push(rAvg);
+        vitaisPPGTime.push(now);
+        if (vitaisPPG.length > 160) { vitaisPPG.shift(); vitaisPPGTime.shift(); }
+        computeVitaisHR();
+      } else {
+        // SEM dedo — não coleta, avisa
+        vitaisNoFingerCount++;
+        if (vitaisNoFingerCount > 15 && !vitaisLocked) {
+          // Se tinha medição em andamento e tirou o dedo, tenta registrar o que tem
+          if (vitaisHrHistory.length >= 3) {
+            vitaisLocked = true;
+            const sorted = [...vitaisHrHistory].sort((a,b)=>a-b);
+            const median = sorted[Math.floor(sorted.length/2)];
+            lockAndRegisterHR(median);
+          } else {
+            // Não tinha medição suficiente — limpa e pede dedo
+            vitaisPPG = []; vitaisPPGTime = []; vitaisHrHistory = []; vitaisStableCount = 0;
+            if (statusEl) { statusEl.textContent = '👆 Encoste o dedo na câmera + flash'; statusEl.style.color = '#fff'; }
+          }
+        }
+      }
     }
     vitaisEdgeRAF = requestAnimationFrame(loop);
   }
@@ -4140,12 +4174,17 @@ function startVitaisPPG() {
 function computeVitaisHR() {
   const now = performance.now();
   const statusEl = document.getElementById('vitais-cam-status');
-  if (now - vitaisLastUpdate < 800) return;
-  if (vitaisPPG.length < 64) {
-    if (statusEl) statusEl.textContent = `Medindo... ${Math.min(99, Math.round(vitaisPPG.length/64*100))}%`;
+  if (now - vitaisLastUpdate < 500) return;
+  vitaisLastUpdate = now;
+
+  // Tempo decorrido de medição (só conta com dedo)
+  const elapsed = (now - vitaisMeasureStart) / 1000;
+  const MEASURE_TIME = 15;  // segundos de medição
+
+  if (vitaisPPG.length < 40) {
+    if (statusEl) { statusEl.textContent = '👆 Segure o dedo firme na câmera...'; statusEl.style.color = '#fff'; }
     return;
   }
-  vitaisLastUpdate = now;
 
   // Suaviza
   const smooth = [];
@@ -4184,65 +4223,69 @@ function computeVitaisHR() {
 
   if (bpm >= 45 && bpm <= 190) {
     vitaisHrHistory.push(bpm);
-    if (vitaisHrHistory.length > 8) vitaisHrHistory.shift();
+    if (vitaisHrHistory.length > 12) vitaisHrHistory.shift();
 
-    // Média com descarte de outliers (mediana ponderada)
+    // Mediana + descarte de outliers
     const sorted = [...vitaisHrHistory].sort((a,b)=>a-b);
     const median = sorted[Math.floor(sorted.length/2)];
-    // Descarta valores muito longe da mediana (> 15 bpm)
     const filtered = vitaisHrHistory.filter(v => Math.abs(v - median) <= 15);
     const avg = Math.round(filtered.reduce((a,b)=>a+b,0)/filtered.length);
 
-    // Atualiza número FC
+    // Atualiza número FC ao vivo
     const hrEl = document.getElementById('hr-val');
     if (hrEl) { hrEl.textContent = avg; pulseElement(hrEl); }
 
-    // Atualiza classificação clínica
     const hrStatus = document.getElementById('hr-status');
     if (hrStatus) {
-      if (avg < 60) { hrStatus.textContent = '● Bradicardia (< 60 bpm)'; hrStatus.style.color = 'var(--w)'; }
-      else if (avg > 100) { hrStatus.textContent = '● Taquicardia (> 100 bpm)'; hrStatus.style.color = 'var(--w)'; }
-      else { hrStatus.textContent = '● Normal (60–100 bpm)'; hrStatus.style.color = 'var(--s)'; }
+      const hc = classifyHR(avg);
+      hrStatus.textContent = '● ' + hc.label + (avg < 60 ? ' (< 60 bpm)' : avg > 100 ? ' (> 100 bpm)' : ' (60–100 bpm)');
+      hrStatus.style.color = hc.color;
     }
 
-    // Anima o ECG conforme o BPM real
     animateECG(avg);
 
-    // ── DETECÇÃO DE ESTABILIDADE ──
-    // Precisa de pelo menos 5 leituras válidas
-    if (vitaisHrHistory.length >= 5) {
-      const recent = vitaisHrHistory.slice(-5);
-      const rMax = Math.max(...recent), rMin = Math.min(...recent);
-      const spread = rMax - rMin;
+    // ── BARRA DE PROGRESSO POR TEMPO ──
+    // Mede por MEASURE_TIME segundos, depois trava
+    const pct = Math.min(100, Math.round(elapsed / MEASURE_TIME * 100));
+    if (statusEl && !vitaisLocked) {
+      statusEl.textContent = `❤️ Medindo... ${pct}% (${avg} bpm)`;
+      statusEl.style.color = pct > 66 ? '#4ade80' : '#fbbf24';
+    }
 
-      if (spread <= 8) {
-        // Está estável — conta confirmações
-        vitaisStableCount++;
-        const pct = Math.min(100, Math.round(vitaisStableCount / 4 * 100));
-        if (statusEl) {
-          statusEl.textContent = `🔒 Estabilizando... ${pct}%`;
-          statusEl.style.color = '#fbbf24';
-        }
-        // 4 confirmações estáveis = trava e registra
-        if (vitaisStableCount >= 4 && !vitaisLocked) {
-          vitaisLocked = true;
-          lockAndRegisterHR(avg);
-        }
-      } else {
-        // Ainda oscilando — reseta contador
-        vitaisStableCount = 0;
-        if (statusEl) {
-          statusEl.textContent = `Medindo ${avg} bpm · segure firme`;
-          statusEl.style.color = '#fff';
-        }
-      }
-    } else {
-      if (statusEl) {
-        statusEl.textContent = `Lendo pulso... ${avg} bpm`;
-        statusEl.style.color = '#fff';
-      }
+    // Ao completar o tempo E ter leituras suficientes = trava
+    if (elapsed >= MEASURE_TIME && vitaisHrHistory.length >= 5 && !vitaisLocked) {
+      vitaisLocked = true;
+      lockAndRegisterHR(avg);
     }
   }
+}
+
+// Gera anotação de enfermagem dos SSVV conforme padrão COFEN
+function generateSSVVNote(bpm, spo2, temp, dateStr, horaStr) {
+  const fcTermo = bpm < 60 ? `bradicárdico (FC: ${bpm} bpm)`
+                : bpm > 100 ? `taquicárdico (FC: ${bpm} bpm)`
+                : `normocárdico (FC: ${bpm} bpm)`;
+  const spo2Termo = spo2 >= 95 ? `eupneico em ar ambiente (SpO₂: ${spo2}%)`
+                  : spo2 >= 90 ? `saturação limítrofe em AA (SpO₂: ${spo2}%)`
+                  : `dessaturando em AA (SpO₂: ${spo2}%)`;
+  const tv = temp.toFixed(1).replace('.', ',');
+  const tempTermo = temp < 35 ? `hipotérmico (T: ${tv}°C)`
+                  : temp <= 37.2 ? `afebril (T: ${tv}°C)`
+                  : temp <= 37.7 ? `subfebril (T: ${tv}°C)`
+                  : temp <= 38.9 ? `febril (T: ${tv}°C)`
+                  : `hipertérmico (T: ${tv}°C)`;
+
+  const critico = (spo2 < 90 || bpm > 120 || temp > 39);
+  const alterado = (bpm < 60 || bpm > 100 || temp > 37.7 || spo2 < 95);
+
+  let conduta;
+  if (critico) conduta = 'Acionado plantão médico imediatamente. Mantida monitorização contínua.';
+  else if (alterado) conduta = 'Comunicado enfermeiro responsável. Paciente mantido sob observação.';
+  else conduta = 'Paciente sem queixas álgicas, segue sob cuidados de enfermagem.';
+
+  return `${dateStr} às ${horaStr}h — Sinais vitais verificados: ${fcTermo}, ${spo2Termo}, ${tempTermo}. ${conduta} ` +
+    `Aferição da FC realizada por fotopletismografia (PPG) via sistema VULT-SCAN. ` +
+    `SpO₂ e temperatura obtidas via sensor integrado ao bracelete Vult-Vein.`;
 }
 
 // Classificação clínica de temperatura (tabela COFEN/semiologia)
@@ -4282,8 +4325,11 @@ function lockAndRegisterHR(bpm) {
   const hora = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
   const data = now.toLocaleDateString('pt-BR');
 
+  // Gera anotação de enfermagem COFEN
+  const nota = generateSSVVNote(bpm, spo2, temp, data, hora);
+
   // Registra medição consolidada dos 3 SSVV
-  vitaisRecords.unshift({ bpm, spo2, temp, hora, data });
+  vitaisRecords.unshift({ bpm, spo2, temp, hora, data, nota });
   if (vitaisRecords.length > 3) vitaisRecords.pop();
 
   renderHRRecords();
@@ -4326,12 +4372,13 @@ function renderSSVVReport() {
     const hr = classifyHR(r.bpm);
     const sp = classifySpO2(r.spo2);
     const tp = classifyTemp(r.temp);
+    const noteId = `ssvv-note-${i}`;
     return `<div style="background:var(--s1);border:.5px solid var(--b1);border-radius:var(--rsm);padding:10px 12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <span style="font-size:11px;font-weight:700;color:var(--t2);">Medição ${vitaisRecords.length - i}</span>
         <span style="font-size:11px;color:var(--t3);font-weight:600;">🕐 ${r.data} ${r.hora}</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
         <div style="text-align:center;">
           <div style="font-size:18px;font-weight:700;color:#e11d48;line-height:1;">${r.bpm}</div>
           <div style="font-size:8px;color:var(--t3);margin-top:2px;">FC · bpm</div>
@@ -4348,8 +4395,24 @@ function renderSSVVReport() {
           <div style="font-size:8px;color:${tp.color};font-weight:700;">${tp.label}</div>
         </div>
       </div>
+      <div style="background:var(--s2);border-radius:var(--rsm);padding:8px 10px;border-left:2.5px solid var(--p);">
+        <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">
+          📝 Anotação de Enfermagem (COFEN)</div>
+        <div style="font-size:11px;color:var(--t1);line-height:1.6;" id="${noteId}">${r.nota}</div>
+        <button onclick="copySSVVNote('${noteId}')" style="margin-top:8px;font-size:10px;font-weight:600;color:var(--p);background:none;border:.5px solid var(--p);border-radius:999px;padding:4px 12px;cursor:pointer;">
+          📋 Copiar anotação</button>
+      </div>
     </div>`;
   }).join('');
+}
+
+// Copia a anotação de SSVV
+function copySSVVNote(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent)
+    .then(() => showToast('📋 Anotação de enfermagem copiada!'))
+    .catch(() => showToast('Copie manualmente o texto.'));
 }
 
 // Anima o ECG na velocidade do batimento real
@@ -4406,6 +4469,27 @@ function stopRealCamera() {
   document.getElementById('scan-lbl').textContent = 'IA · Aguardando...';
   showToast('Câmera desligada.');
 }
+
+// ── Medições de exemplo pré-carregadas (para demonstração) ──
+// Mostram como fica o relatório de SSVV. Serão substituídas pelas medições reais.
+(function initExampleSSVV() {
+  const hoje = new Date();
+  const ontem = new Date(hoje.getTime() - 86400000);
+  const d1 = hoje.toLocaleDateString('pt-BR');
+  const d2 = ontem.toLocaleDateString('pt-BR');
+  vitaisRecords = [
+    { bpm: 78, spo2: 98, temp: 36.5, hora: '15:42', data: d1,
+      nota: generateSSVVNote(78, 98, 36.5, d1, '15:42') },
+    { bpm: 104, spo2: 96, temp: 38.2, hora: '09:15', data: d2,
+      nota: generateSSVVNote(104, 96, 38.2, d2, '09:15') },
+  ];
+  // Renderiza assim que a página carregar
+  if (document.readyState !== 'loading') {
+    setTimeout(() => { renderSSVVReport(); renderHRRecords(); }, 100);
+  } else {
+    document.addEventListener('DOMContentLoaded', () => { renderSSVVReport(); renderHRRecords(); });
+  }
+})();
 
 console.log('✅ VultScan v7.0 — todos os motores carregados e prontos.');
 </script>
