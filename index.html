@@ -4025,7 +4025,17 @@ function updateVitalSigns(bpm, spo2, temp, live, realHR) {
   const hrEl = document.getElementById('hr-val');
   const spEl = document.getElementById('spo2-val');
   const tmpEl = document.getElementById('temp-val');
-  if (hrEl && bpm) { hrEl.textContent = bpm; if(live) pulseElement(hrEl); }
+  if (hrEl && bpm) {
+    hrEl.textContent = bpm;
+    if(live) pulseElement(hrEl);
+    // SEMPRE sincroniza a classificação junto com o número (evita etiqueta presa)
+    const hrStatus = document.getElementById('hr-status');
+    if (hrStatus) {
+      const hc = classifyHR(bpm);
+      hrStatus.textContent = '● ' + hc.label + ' (' + hc.faixa + ')';
+      hrStatus.style.color = hc.color;
+    }
+  }
   // SpO2 e Temp só atualizados se vierem números reais (do bracelete futuro)
   if (spEl && typeof spo2 === 'number') { spEl.textContent = spo2; if(live) pulseElement(spEl); }
   if (tmpEl && typeof temp === 'number') { tmpEl.textContent = temp; }
@@ -4310,7 +4320,7 @@ function computeVitaisHR() {
     const hrStatus = document.getElementById('hr-status');
     if (hrStatus) {
       const hc = classifyHR(avg);
-      hrStatus.textContent = '● ' + hc.label + (avg < 60 ? ' (< 60 bpm)' : avg > 100 ? ' (> 100 bpm)' : ' (60–100 bpm)');
+      hrStatus.textContent = '● ' + hc.label + ' (' + hc.faixa + ')';
       hrStatus.style.color = hc.color;
     }
 
@@ -4369,11 +4379,12 @@ function classifyTemp(t) {
   if (t <= 40.0) return { label: 'Pirexia', color: 'var(--d)' };
   return { label: 'Hiperpirexia', color: 'var(--d)' };
 }
-// Classificação de FC
+// Classificação de FC (adultos em repouso)
 function classifyHR(bpm) {
-  if (bpm < 60) return { label: 'Bradicardia', color: 'var(--w)' };
-  if (bpm > 100) return { label: 'Taquicardia', color: 'var(--w)' };
-  return { label: 'Normal', color: 'var(--s)' };
+  if (bpm < 60) return { label: 'Bradicardia', color: 'var(--w)', faixa: '< 60 bpm' };
+  if (bpm <= 80) return { label: 'Normal', color: 'var(--s)', faixa: '60–80 bpm' };
+  if (bpm <= 100) return { label: 'Limite do normal', color: 'var(--w)', faixa: '81–100 bpm' };
+  return { label: 'Taquicardia', color: 'var(--d)', faixa: '> 100 bpm' };
 }
 // Classificação de SpO2
 function classifySpO2(v) {
@@ -4386,6 +4397,17 @@ function classifySpO2(v) {
 function lockAndRegisterHR(bpm) {
   const statusEl = document.getElementById('vitais-cam-status');
   if (statusEl) { statusEl.textContent = `✅ Medição concluída: ${bpm} bpm`; statusEl.style.color = '#4ade80'; }
+
+  // Sincroniza número + classificação com o valor FINAL travado
+  const hrEl = document.getElementById('hr-val');
+  if (hrEl) hrEl.textContent = bpm;
+  const hrStatus = document.getElementById('hr-status');
+  if (hrStatus) {
+    const hc = classifyHR(bpm);
+    hrStatus.textContent = '● ' + hc.label + ' (' + hc.faixa + ')';
+    hrStatus.style.color = hc.color;
+  }
+  animateECG(bpm);
 
   // Captura os 3 sinais vitais no momento da medição
   const spo2El = document.getElementById('spo2-val');
