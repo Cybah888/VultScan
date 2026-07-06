@@ -2373,10 +2373,16 @@
                 Encoste o dedo na câmera + flash
               </div>
             </div>
-            <button id="vitais-cam-btn" onclick="toggleVitalsCamera()"
-              style="width:100%;padding:12px;border-radius:var(--r);border:none;background:linear-gradient(135deg,#e11d48,#be185d);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;">
-              ❤️ Medir Frequência Cardíaca Real (câmera)
-            </button>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button id="vitais-cam-btn" onclick="toggleVitalsCamera()"
+                style="flex:1;padding:12px;border-radius:var(--r);border:none;background:linear-gradient(135deg,#e11d48,#be185d);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                ❤️ Medir FC Real (câmera)
+              </button>
+              <button id="vitais-flash-btn" onclick="toggleVitalsFlash()"
+                style="padding:12px 14px;border-radius:var(--r);border:1px solid var(--b1);background:var(--s1);color:var(--t2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                💡 Ligar Flash
+              </button>
+            </div>
           </div>
 
           <!-- Live metrics grid -->
@@ -4057,6 +4063,7 @@ let vitaisLocked = false;
 let vitaisRecords = [];
 let vitaisTimeout = null;
 let vitaisNoFingerCount = 0;
+let vitaisTorchOn = false;
 
 async function toggleVitalsCamera() {
   const wrap = document.getElementById('vitais-cam-wrap');
@@ -4077,10 +4084,10 @@ async function toggleVitalsCamera() {
 
     const track = vitaisCameraStream.getVideoTracks()[0];
     vitaisTorchTrack = track;
-    const caps = track.getCapabilities ? track.getCapabilities() : {};
-    if (caps.torch) {
-      await track.applyConstraints({ advanced: [{ torch: true }] });
-    }
+    // Liga o flash de forma robusta (tenta 3 vezes — alguns celulares demoram a expor o torch)
+    vitaisTorchOn = false;
+    tryEnableTorch(track, 0);
+
     vitaisMeasureStart = 0;
     vitaisStableCount = 0;
     vitaisLocked = false;
@@ -4111,6 +4118,52 @@ async function toggleVitalsCamera() {
   }
 }
 
+// Tenta ligar o flash com retentativas (celulares diferentes expõem o torch em tempos diferentes)
+async function tryEnableTorch(track, attempt) {
+  if (!track || attempt > 3) {
+    updateFlashBtn(false, true);  // sem suporte
+    return;
+  }
+  try {
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    if (caps.torch) {
+      await track.applyConstraints({ advanced: [{ torch: true }] });
+      vitaisTorchOn = true;
+      updateFlashBtn(true, false);
+      return;
+    }
+  } catch (e) { /* tenta de novo */ }
+  setTimeout(() => tryEnableTorch(track, attempt + 1), 700);
+}
+
+// Botão manual de flash
+async function toggleVitalsFlash() {
+  if (!vitaisTorchTrack) { showToast('Ligue a câmera primeiro.'); return; }
+  try {
+    const caps = vitaisTorchTrack.getCapabilities ? vitaisTorchTrack.getCapabilities() : {};
+    if (!caps.torch) {
+      showToast('💡 Este celular não permite controlar o flash pelo navegador. Use em local bem iluminado ou encoste o dedo suavemente.');
+      return;
+    }
+    vitaisTorchOn = !vitaisTorchOn;
+    await vitaisTorchTrack.applyConstraints({ advanced: [{ torch: vitaisTorchOn }] });
+    updateFlashBtn(vitaisTorchOn, false);
+    showToast(vitaisTorchOn ? '💡 Flash ligado!' : 'Flash desligado.');
+  } catch (e) {
+    showToast('⚠️ Não foi possível alternar o flash neste dispositivo.');
+  }
+}
+
+function updateFlashBtn(on, unsupported) {
+  const fb = document.getElementById('vitais-flash-btn');
+  if (!fb) return;
+  if (unsupported) { fb.innerHTML = '💡 Flash indisponível'; fb.style.opacity = '.55'; return; }
+  fb.innerHTML = on ? '💡 Flash: LIGADO' : '💡 Ligar Flash';
+  fb.style.opacity = '1';
+  fb.style.borderColor = on ? '#fbbf24' : 'var(--b1)';
+  fb.style.color = on ? '#b45309' : 'var(--t2)';
+}
+
 function startVitaisPPG() {
   const video = document.getElementById('vitais-camera-feed');
   const work = document.createElement('canvas');
@@ -4129,10 +4182,27 @@ function startVitaisPPG() {
       for (let i = 0; i < src.length; i += 4) { rSum += src[i]; gSum += src[i+1]; bSum += src[i+2]; }
       const n = src.length / 4;
       const rAvg = rSum/n, gAvg = gSum/n, bAvg = bSum/n;
+      const brightness = (rAvg + gAvg + bAvg) / 3;
 
-      // ── DETECÇÃO DE DEDO ──
-      // Dedo sobre câmera+flash = vermelho MUITO dominante e escuro nos outros canais
-      const fingerOn = (rAvg > 60 && rAvg > gAvg * 1.8 && rAvg > bAvg * 1.8);
+      // Uniformidade espacial: dedo cobrindo = imagem quase uniforme (sem bordas)
+      // Amostra 1 pixel a cada 16 para calcular desvio padrão do vermelho
+      let devSum = 0, devN = 0;
+      for (let i = 0; i < src.length; i += 64) {
+        const d = src[i] - rAvg; devSum += d*d; devN++;
+      }
+      const rStd = Math.sqrt(devSum / devN);
+
+      // ── DETECÇÃO DE DEDO MULTI-CRITÉRIO (funciona em qualquer câmera) ──
+      // 1. Vermelho dominante (flash atravessa o dedo) — critério clássico, agora tolerante
+      const redDominant = (rAvg > 40 && rAvg > gAvg * 1.15 && rAvg > bAvg * 1.15);
+      // 2. Imagem saturada de luz (flash forte satura o sensor — comum em vários modelos)
+      const saturated = (brightness > 170 && rAvg >= gAvg && rAvg >= bAvg);
+      // 3. Imagem muito escura (dedo cobre a lente sem flash)
+      const dark = (brightness < 55);
+      // 4. Imagem uniforme (dedo colado = sem bordas/detalhes na cena)
+      const uniform = (rStd < 28);
+
+      const fingerOn = redDominant || saturated || (dark && uniform) || (uniform && rAvg > gAvg);
 
       const statusEl = document.getElementById('vitais-cam-status');
       const now = performance.now();
@@ -4144,14 +4214,16 @@ function startVitaisPPG() {
           if (vitaisPPG.length === 0) vitaisMeasureStart = now;
         }
         vitaisNoFingerCount = 0;
-        vitaisPPG.push(rAvg);
+        // Usa o canal com sinal pulsátil mais forte (verde é melhor em câmeras saturadas)
+        const signal = (saturated && gAvg > 30) ? gAvg : rAvg;
+        vitaisPPG.push(signal);
         vitaisPPGTime.push(now);
         if (vitaisPPG.length > 160) { vitaisPPG.shift(); vitaisPPGTime.shift(); }
         computeVitaisHR();
       } else {
-        // SEM dedo — não coleta, avisa
+        // SEM dedo — não coleta, avisa (tolerância maior: ~1s antes de resetar)
         vitaisNoFingerCount++;
-        if (vitaisNoFingerCount > 15 && !vitaisLocked) {
+        if (vitaisNoFingerCount > 30 && !vitaisLocked) {
           // Se tinha medição em andamento e tirou o dedo, tenta registrar o que tem
           if (vitaisHrHistory.length >= 3) {
             vitaisLocked = true;
@@ -4437,13 +4509,15 @@ function stopVitalsCamera() {
   if (vitaisTimeout) { clearTimeout(vitaisTimeout); vitaisTimeout = null; }
   if (vitaisTorchTrack) { try { vitaisTorchTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e){} }
   if (vitaisCameraStream) vitaisCameraStream.getTracks().forEach(t => t.stop());
-  vitaisCameraStream = null; vitaisTorchTrack = null;
+  vitaisCameraStream = null; vitaisTorchTrack = null; vitaisTorchOn = false;
   vitaisPPG = []; vitaisPPGTime = []; vitaisHrHistory = []; vitaisLastUpdate = 0; vitaisMeasureStart = 0;
-  vitaisStableCount = 0; vitaisLocked = false;
+  vitaisStableCount = 0; vitaisLocked = false; vitaisNoFingerCount = 0;
   wrap.style.height = '0';
   video.srcObject = null;
-  btn.innerHTML = '❤️ Medir Frequência Cardíaca Real (câmera)';
+  btn.innerHTML = '❤️ Medir FC Real (câmera)';
   btn.style.background = 'linear-gradient(135deg,#e11d48,#be185d)';
+  const fb = document.getElementById('vitais-flash-btn');
+  if (fb) { fb.innerHTML = '💡 Ligar Flash'; fb.style.opacity = '1'; fb.style.borderColor = 'var(--b1)'; fb.style.color = 'var(--t2)'; }
   const statusEl = document.getElementById('vitais-cam-status');
   if (statusEl) { statusEl.textContent = 'Encoste o dedo na câmera + flash'; statusEl.style.color = '#fff'; }
 }
