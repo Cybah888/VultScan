@@ -2019,6 +2019,14 @@
                 <div class="toggle" id="toggle-rnds"></div>
               </div>
               <div class="protocol-item">
+                <div class="proto-icon">⚠️</div>
+                <div class="proto-info">
+                  <div class="proto-title">Alerta de Alergias do Paciente</div>
+                  <div class="proto-desc">Avisa antes da punção sobre alergias registradas: látex, adesivos/esparadrapo e antissépticos (clorexidina)</div>
+                </div>
+                <div class="toggle on"></div>
+              </div>
+              <div class="protocol-item">
                 <div class="proto-icon">🌡️</div>
                 <div class="proto-info">
                   <div class="proto-title">Monitor Térmico do Bracelete</div>
@@ -4268,6 +4276,8 @@ function startVitaisPPG() {
 
   function loop() {
     if (!vitaisCameraStream) return;
+    // ── TRAVADO: medição concluída — congela tudo e só aguarda o fechamento ──
+    if (vitaisLocked) { vitaisEdgeRAF = requestAnimationFrame(loop); return; }
     if (video.readyState >= 2) {
       wctx.drawImage(video, 0, 0, W, H);
       let frame;
@@ -4339,6 +4349,8 @@ function startVitaisPPG() {
 }
 
 function computeVitaisHR() {
+  // Medição travada ou câmera fechada = não atualiza mais NADA (número congelado)
+  if (vitaisLocked || !vitaisCameraStream) return;
   const now = performance.now();
   const statusEl = document.getElementById('vitais-cam-status');
   if (now - vitaisLastUpdate < 500) return;
@@ -4480,45 +4492,52 @@ function classifySpO2(v) {
 
 // Trava o valor final e registra a medição consolidada
 function lockAndRegisterHR(bpm) {
-  const statusEl = document.getElementById('vitais-cam-status');
-  if (statusEl) { statusEl.textContent = `✅ Medição concluída: ${bpm} bpm`; statusEl.style.color = '#4ade80'; }
+  // 1. Cancela o timeout de segurança de 30s (não pode disparar depois)
+  if (vitaisTimeout) { clearTimeout(vitaisTimeout); vitaisTimeout = null; }
 
-  // Sincroniza número + classificação com o valor FINAL travado
-  const hrEl = document.getElementById('hr-val');
-  if (hrEl) hrEl.textContent = bpm;
-  const hrStatus = document.getElementById('hr-status');
-  if (hrStatus) {
-    const hc = classifyHR(bpm);
-    hrStatus.textContent = '● ' + hc.label + ' (' + hc.faixa + ')';
-    hrStatus.style.color = hc.color;
+  try {
+    const statusEl = document.getElementById('vitais-cam-status');
+    if (statusEl) { statusEl.textContent = `✅ Medição concluída: ${bpm} bpm`; statusEl.style.color = '#4ade80'; }
+
+    // Sincroniza número + classificação com o valor FINAL travado
+    const hrEl = document.getElementById('hr-val');
+    if (hrEl) hrEl.textContent = bpm;
+    const hrStatus = document.getElementById('hr-status');
+    if (hrStatus) {
+      const hc = classifyHR(bpm);
+      hrStatus.textContent = '● ' + hc.label + ' (' + hc.faixa + ')';
+      hrStatus.style.color = hc.color;
+    }
+    animateECG(bpm);
+
+    // Captura os 3 sinais vitais no momento da medição
+    const spo2El = document.getElementById('spo2-val');
+    const tempEl = document.getElementById('temp-val');
+    const spo2 = spo2El ? parseInt(spo2El.textContent) || 98 : 98;
+    const temp = tempEl ? parseFloat(tempEl.textContent) || 36.5 : 36.5;
+
+    const now = new Date();
+    const hora = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    const data = now.toLocaleDateString('pt-BR');
+
+    // Gera anotação de enfermagem COFEN
+    const nota = generateSSVVNote(bpm, spo2, temp, data, hora);
+
+    // Registra medição consolidada dos 3 SSVV
+    vitaisRecords.unshift({ bpm, spo2, temp, hora, data, nota });
+    if (vitaisRecords.length > 3) vitaisRecords.pop();
+
+    renderHRRecords();
+    renderSSVVReport();
+
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    showToast(`✅ SSVV registrados: FC ${bpm} · SpO₂ ${spo2}% · Temp ${temp}°C`);
+  } catch (e) {
+    console.warn('Registro SSVV:', e);
+  } finally {
+    // 2. Fechamento GARANTIDO da câmera após 1,5s — aconteça o que acontecer
+    vitaisTimeout = setTimeout(() => { stopVitalsCamera(); }, 1500);
   }
-  animateECG(bpm);
-
-  // Captura os 3 sinais vitais no momento da medição
-  const spo2El = document.getElementById('spo2-val');
-  const tempEl = document.getElementById('temp-val');
-  const spo2 = spo2El ? parseInt(spo2El.textContent) || 98 : 98;
-  const temp = tempEl ? parseFloat(tempEl.textContent) || 36.5 : 36.5;
-
-  const now = new Date();
-  const hora = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-  const data = now.toLocaleDateString('pt-BR');
-
-  // Gera anotação de enfermagem COFEN
-  const nota = generateSSVVNote(bpm, spo2, temp, data, hora);
-
-  // Registra medição consolidada dos 3 SSVV
-  vitaisRecords.unshift({ bpm, spo2, temp, hora, data, nota });
-  if (vitaisRecords.length > 3) vitaisRecords.pop();
-
-  renderHRRecords();
-  renderSSVVReport();
-
-  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-  showToast(`✅ SSVV registrados: FC ${bpm} · SpO₂ ${spo2}% · Temp ${temp}°C`);
-
-  // Para a câmera após 2s
-  setTimeout(() => { if (vitaisCameraStream) stopVitalsCamera(); }, 2000);
 }
 
 // Renderiza registros na aba Vitais (abaixo do ECG)
@@ -4609,24 +4628,30 @@ function animateECG(bpm) {
 }
 
 function stopVitalsCamera() {
-  const wrap = document.getElementById('vitais-cam-wrap');
-  const video = document.getElementById('vitais-camera-feed');
-  const btn = document.getElementById('vitais-cam-btn');
+  // 1º: para TUDO que roda em segundo plano (mesmo que o resto falhe)
   if (vitaisEdgeRAF) { cancelAnimationFrame(vitaisEdgeRAF); vitaisEdgeRAF = null; }
   if (vitaisTimeout) { clearTimeout(vitaisTimeout); vitaisTimeout = null; }
   if (vitaisTorchTrack) { try { vitaisTorchTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e){} }
-  if (vitaisCameraStream) vitaisCameraStream.getTracks().forEach(t => t.stop());
+  try { if (vitaisCameraStream) vitaisCameraStream.getTracks().forEach(t => t.stop()); } catch(e){}
   vitaisCameraStream = null; vitaisTorchTrack = null; vitaisTorchOn = false;
   vitaisPPG = []; vitaisPPGTime = []; vitaisHrHistory = []; vitaisLastUpdate = 0; vitaisMeasureStart = 0;
   vitaisStableCount = 0; vitaisLocked = false; vitaisNoFingerCount = 0;
-  wrap.style.height = '0';
-  video.srcObject = null;
-  btn.innerHTML = '❤️ Medir FC Real (câmera)';
-  btn.style.background = 'linear-gradient(135deg,#e11d48,#be185d)';
-  const fb = document.getElementById('vitais-flash-btn');
-  if (fb) { fb.innerHTML = '💡 Ligar Flash'; fb.style.opacity = '1'; fb.style.borderColor = 'var(--b1)'; fb.style.color = 'var(--t2)'; }
-  const statusEl = document.getElementById('vitais-cam-status');
-  if (statusEl) { statusEl.textContent = 'Encoste o dedo na câmera + flash'; statusEl.style.color = '#fff'; }
+  // 2º: restaura a interface (com proteção — se um elemento faltar, os demais continuam)
+  try {
+    const wrap = document.getElementById('vitais-cam-wrap');
+    if (wrap) wrap.style.height = '0';
+    const video = document.getElementById('vitais-camera-feed');
+    if (video) video.srcObject = null;
+    const btn = document.getElementById('vitais-cam-btn');
+    if (btn) {
+      btn.innerHTML = '❤️ Medir FC Real (câmera)';
+      btn.style.background = 'linear-gradient(135deg,#e11d48,#be185d)';
+    }
+    const fb = document.getElementById('vitais-flash-btn');
+    if (fb) { fb.innerHTML = '💡 Ligar Flash'; fb.style.opacity = '1'; fb.style.borderColor = 'var(--b1)'; fb.style.color = 'var(--t2)'; }
+    const statusEl = document.getElementById('vitais-cam-status');
+    if (statusEl) { statusEl.textContent = 'Encoste o dedo na câmera + flash'; statusEl.style.color = '#fff'; }
+  } catch(e) { console.warn('stopVitalsCamera UI:', e); }
 }
 
 function stopRealCamera() {
